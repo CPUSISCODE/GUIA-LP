@@ -381,6 +381,10 @@
           <label>% lucro desejado (padrão)</label>
           <input type="number" id="lpLucro" value="30" step="0.1">
         </div>
+        <div class="field">
+          <label>Frete pago à parte (R$) <span class="hint" style="margin:0;">soma ao frete do XML se houver</span></label>
+          <input type="text" inputmode="decimal" id="lpFreteManual" placeholder="0,00">
+        </div>
         <div class="field" style="display:flex; align-items:flex-end;">
           <button class="small" id="lpApplyDefaultsBtn">Aplicar a todos os itens</button>
         </div>
@@ -425,7 +429,7 @@
         <button id="lpXmlPrintBtn" title="Imprimir relatório">🖨 Imprimir</button>
         <button id="lpXmlPdfBtn" title="Baixar em PDF">⬇ Baixar PDF</button>
       </div>
-      <div class="note" id="lpXmlNote" style="display:none; margin-top:14px;">"Custo" = valor XML − desconto + frete + ICMS de entrada + custo operacional (o ICMS de entrada é <b>abatido</b> como crédito na apuração, mas continua entrando no custo de aquisição pra fins de precificação). "Tributos venda" = ICMS 19% (débito) + PIS 0,65% + COFINS 3% + IRPJ 1,08% + CSLL 1,08% da receita — apurados por fora do CMV mensalmente. "CMV" = Custo + Tributos venda − Crédito de ICMS (efeito líquido). O código de venda no LP é sempre <b>CST</b> (não CSOSN). Produtos com ST usam CST 60 (ICMS já retido). Editar "% lucro" recalcula o preço; editar o preço recalcula o "%".</div>
+      <div class="note" id="lpXmlNote" style="display:none; margin-top:14px;">"Custo" = valor XML − desconto − ICMS desonerado + frete (XML e/ou pago à parte) + ICMS de entrada + custo operacional (o ICMS de entrada é <b>abatido</b> como crédito na apuração, mas continua entrando no custo de aquisição pra fins de precificação). "Tributos venda" = ICMS 19% (débito) + PIS 0,65% + COFINS 3% + IRPJ 1,08% + CSLL 1,08% da receita — apurados por fora do CMV mensalmente. "CMV" = Custo + Tributos venda − Crédito de ICMS (efeito líquido). Se o transporte foi pago à parte, digite o valor total em <b>"Frete pago à parte"</b> e o sistema rateia proporcional ao vProd. Itens com <span class="badge-mini deson" style="margin:0;">Desonerado</span> tiveram ICMS abatido na nota (ex.: SUFRAMA/ZFM/ALC) — esse valor é <b>deduzido do custo</b>. O código de venda no LP é sempre <b>CST</b> (não CSOSN). Produtos com ST usam CST 60 (ICMS já retido). Editar "% lucro" recalcula o preço; editar o preço recalcula o "%".</div>
     </div>
   </div><!-- /pageLP -->
 
@@ -806,9 +810,19 @@ function parseIcmsGroup(det){
   }
   if(!group) return {vICMSDeson:0, motDesICMS:'', vIBS, vCBS};
   const getVal = (tag)=>{ const els = group.getElementsByTagName(tag); return els.length ? (els[0].textContent||'').trim() : ''; };
+  // IPI destacado no item (integra a base do ICMS-ST para comerciante)
+  let vIPI = 0;
+  const ipiEls = imposto.getElementsByTagName('IPI');
+  if(ipiEls.length){
+    const vIPIEls = ipiEls[0].getElementsByTagName('vIPI');
+    if(vIPIEls.length) vIPI = parseFloat((vIPIEls[0].textContent||'').trim()) || 0;
+  }
   return {
     vICMSDeson: parseFloat(getVal('vICMSDeson')) || 0,
     motDesICMS: getVal('motDesICMS'),
+    orig: getVal('orig'),
+    vICMS: parseFloat(getVal('vICMS')) || 0,
+    vIPI,
     vIBS, vCBS,
   };
 }
@@ -838,6 +852,7 @@ function parseNFeXML(text){
   const emitName = emit ? getFirst('xNome', emit) : '';
   const enderEmitEls = emit ? emit.getElementsByTagName('enderEmit') : [];
   const emitUF = (enderEmitEls.length ? getFirst('UF', enderEmitEls[0]) : '').toUpperCase();
+  const emitCRT = emitEls.length ? getFirst('CRT', emitEls[0]) : '';
 
   const detEls = infNFe.getElementsByTagName('det');
   if(!detEls.length) throw new Error('Nenhum item (<det>) encontrado no XML.');
@@ -861,8 +876,13 @@ function parseNFeXML(text){
       vProd: parseFloat(getFirst('vProd', prod)) || 0,
       vDesc: parseFloat(getFirst('vDesc', prod)) || 0,
       vFrete: parseFloat(getFirst('vFrete', prod)) || 0,
+      vSeg: parseFloat(getFirst('vSeg', prod)) || 0,
+      vOutro: parseFloat(getFirst('vOutro', prod)) || 0,
       vICMSDeson: icmsInfo.vICMSDeson,
       motDesICMS: icmsInfo.motDesICMS,
+      orig: icmsInfo.orig,
+      vICMS: icmsInfo.vICMS,
+      vIPI: icmsInfo.vIPI,
       vIBS: icmsInfo.vIBS,
       vCBS: icmsInfo.vCBS,
     });
@@ -885,45 +905,10 @@ function parseNFeXML(text){
     items.forEach(it => { it.vFrete = globalVFrete * (it.vProd/sumVProd); });
   }
 
-  return {emitUF, emitName, items, globalVFrete, globalVDesc};
+  return {emitUF, emitName, emitCRT, items, globalVFrete, globalVDesc};
 }
 
-function computeIcmsEntradaXml(item, emitUF){
-  const digits = normalize(item.ncm);
-  const rec = dbByCode[digits];
-  const hasCest = rec ? !!rec.seg : false;
-  const mva = rec ? (rec.mva||0) : 0;
-  const mono = rec ? !!rec.mono : false;
-
-  // Cesta básica do Acre (Arts. 184-G/184-H): DIFAL com encerramento
-  const cesta = qualifyCestaAC(digits, emitUF === 'AC');
-  if(cesta && cesta.qualifica){
-    if(emitUF === 'AC'){
-      return {tipo:'cesta', icms: 0, hasCest, mono, cesta:true, aliqLabel: ''};
-    }
-    const regionInfo = REGIONS[emitUF];
-    const group = regionInfo ? regionInfo.group : 'norte';
-    const rates = interRates(group);
-    const difalPct = ALIQ_CESTA_AC - rates.inter;
-    return {tipo:'cesta', icms: item.vProd * difalPct/100, hasCest, mono, cesta:true,
-            aliqLabel: 'DIFAL cesta ' + difalPct + '% (encerra)'};
-  }
-
-  if(emitUF === 'AC'){
-    return {tipo:'interna', icms: 0, hasCest, mono, aliqLabel: ''};
-  }
-  const regionInfo = REGIONS[emitUF];
-  const group = regionInfo ? regionInfo.group : 'norte';
-  const rates = interRates(group);
-  if(hasCest){
-    const mvaAjustada = ((1+mva/100)*(1-rates.inter/100)/(1-ALIQ_INTERNA_AC/100)-1)*100;
-    const icmsProprio = item.vProd * rates.inter/100;
-    const baseST = item.vProd * (1+mvaAjustada/100);
-    const icmsST = Math.max(baseST*ALIQ_INTERNA_AC/100 - icmsProprio, 0);
-    return {tipo:'st', icms: icmsST, hasCest, mono, aliqLabel: 'ST ' + ALIQ_INTERNA_AC + '% · MVA aj. ' + mvaAjustada.toFixed(1) + '%'};
-  }
-  return {tipo:'antecipacao', icms: item.vProd * rates.antecip/100, hasCest, mono, aliqLabel: 'antecip. ' + rates.antecip + '%'};
-}
+// (função legada computeIcmsEntradaXml removida — cálculo unificado em computeIcmsEntradaLP)
 
 // ---------- Abas ----------
 document.getElementById('tabBtnLP').addEventListener('click', ()=>switchTab('lp'));
@@ -1094,39 +1079,69 @@ function calcIrpjEffective(receitaTrimestre){
 // Regime normal: só paga ICMS-ST quando o produto está sujeito a ST, ou DIFAL de cesta básica
 // (Arts. 184-G/H), ou nada (produto normal comprado de fora — ICMS é destacado na nota mas não gera
 // obrigação de recolhimento na entrada).
-function computeIcmsEntradaLP(item, emitUF){
+// Alíquotas por tipo de operação: mercadoria IMPORTADA (orig 1/2/3/8) usa 4%
+// interestadual (Resolução Senado 13/2012), independente do estado de origem.
+function ratesForItem(item, emitUF){
+  const orig = ((item && item.orig) || '').trim();
+  const importada = orig === '1' || orig === '2' || orig === '3' || orig === '8';
+  if(importada) return {rates: interRates('exterior'), importada: true};
+  const regionInfo = REGIONS[emitUF];
+  return {rates: interRates(regionInfo ? regionInfo.group : 'norte'), importada: false};
+}
+
+function computeIcmsEntradaLP(item, emitUF, emitCRT){
   const digits = normalize(item.ncm);
   const rec = dbByCode[digits];
   const hasST = rec ? !!rec.seg : false;
   const mono = rec ? !!rec.mono : false;
 
+  // Base da operação = vProd − vDesc + frete + seguro + outras despesas
+  const baseOper = Math.max(
+    (item.vProd||0) - (item.vDesc||0) + (item.vFrete||0) + (item.vSeg||0) + (item.vOutro||0), 0);
+
   // Cesta básica AC (Arts. 184-G/H): DIFAL com encerramento
   const cesta = qualifyCestaAC(digits, emitUF === 'AC');
   if(cesta && cesta.qualifica){
     if(emitUF === 'AC') return {tipo:'cesta', icms:0, hasST, mono, cesta:true, aliqLabel:''};
-    const rates = interRates(REGIONS[emitUF].group);
+    const {rates, importada} = ratesForItem(item, emitUF);
     const difalPct = ALIQ_CESTA_AC - rates.inter;
-    return {tipo:'cesta', icms:item.vProd * difalPct/100, hasST, mono, cesta:true,
-            aliqLabel:'DIFAL cesta ' + difalPct + '% (encerra)'};
+    return {tipo:'cesta', icms:baseOper * difalPct/100, hasST, mono, cesta:true,
+            aliqLabel:'DIFAL cesta ' + difalPct + '%' + (importada ? ' · importado 4%' : '') + ' (encerra)'};
   }
 
   // Compra dentro do estado — nada a recolher
   if(emitUF === 'AC') return {tipo:'interna', icms:0, hasST, mono, aliqLabel:''};
 
-  const rates = interRates(REGIONS[emitUF].group);
+  const {rates, importada} = ratesForItem(item, emitUF);
 
-  // Produto com ST: ICMS-ST devido na entrada
+  // Produto com ST: ICMS-ST devido na entrada (com encerramento)
   if(hasST){
-    const mvaAj = ((1+(rec.mva||0)/100)*(1-rates.inter/100)/(1-ALIQ_INTERNA_AC/100)-1)*100;
-    const icmsProprio = item.vProd * rates.inter/100;
-    const baseST = item.vProd * (1+mvaAj/100);
+    // Convênio ICMS 35/2011: remetente optante do Simples Nacional (CRT 1 ou 2)
+    // usa a MVA ORIGINAL, sem ajuste.
+    const remetenteSN = emitCRT === '1' || emitCRT === '2';
+    const mvaAplicada = remetenteSN
+      ? (rec.mva||0)
+      : ((1+(rec.mva||0)/100)*(1-rates.inter/100)/(1-ALIQ_INTERNA_AC/100)-1)*100;
+    // Base do ST inclui também o IPI destacado (comprador comerciante)
+    const baseST = (baseOper + (item.vIPI||0)) * (1+mvaAplicada/100);
+    // ICMS próprio a deduzir:
+    // - vICMS destacado na NF quando houver;
+    // - operação DESONERADA (SUFRAMA/isenção: vICMSDeson > 0 sem destaque) → nada a
+    //   deduzir, pois nenhum ICMS foi cobrado na origem;
+    // - senão, teórico (base × alíq. interestadual).
+    const desonerada = (item.vICMSDeson||0) > 0 && !(item.vICMS||0);
+    const icmsProprio = (item.vICMS||0) > 0 ? item.vICMS
+                      : desonerada ? 0
+                      : baseOper * rates.inter/100;
     const icmsST = Math.max(baseST*ALIQ_INTERNA_AC/100 - icmsProprio, 0);
-    return {tipo:'st', icms:icmsST, hasST, mono, aliqLabel:'ST ' + ALIQ_INTERNA_AC + '% · MVA aj. ' + mvaAj.toFixed(1) + '%'};
+    const label = 'ST ' + ALIQ_INTERNA_AC + '% · MVA ' + (remetenteSN ? 'orig. (remet. SN) ' : 'aj. ') + mvaAplicada.toFixed(1) + '%' + (importada ? ' · importado 4%' : '');
+    return {tipo:'st', icms:icmsST, hasST, mono, aliqLabel: label};
   }
 
-  // Produto normal comprado de fora no LP: nada a recolher na entrada.
-  // O ICMS destacado na nota do fornecedor NÃO gera crédito (regra do negócio: sem crédito).
-  return {tipo:'normal', icms:0, hasST, mono, aliqLabel:''};
+  // Produto normal comprado de fora: antecipação parcial (RICMS/AC).
+  // Vira crédito na apuração — abate do débito de ICMS na venda.
+  return {tipo:'antecipacao', icms: baseOper * rates.antecip/100, hasST, mono,
+          aliqLabel:'antecip. ' + rates.antecip + '%' + (importada ? ' (importado)' : '')};
 }
 
 // ---------- Consulta individual LP ----------
@@ -1429,7 +1444,8 @@ function lpLoadXmlItems(parsed){
   const defaultLucro = parseFloat(document.getElementById('lpLucro').value) || 30;
   lpXmlItemsState = parsed.items.map(item => ({
     raw: item, emitUF: parsed.emitUF,
-    entrada: computeIcmsEntradaLP(item, parsed.emitUF),
+    entrada: computeIcmsEntradaLP(item, parsed.emitUF, parsed.emitCRT),
+    emitCRT: parsed.emitCRT,
     custoOpPct: defaultCustoOp, lucroPct: defaultLucro,
     manualPrice: null, editMode: 'lucro',
     unPorEmb: 1, // fracionamento — usuário edita direto na tabela
@@ -1475,30 +1491,53 @@ document.getElementById('lpReceitaTrimestre').addEventListener('input', function
   refreshLpTaxRatesInfo();
   if(lpXmlItemsState.length) lpRenderXmlTable();
 });
+document.getElementById('lpFreteManual').addEventListener('input', ()=>{ if(lpXmlItemsState.length) lpRenderXmlTable(); });
+document.getElementById('lpFreteManual').addEventListener('change', function(){
+  const v = parseBRLInput(this) || 0;
+  if(v > 0) this.value = brl(v).replace('R$ ','');
+  if(lpXmlItemsState.length) lpRenderXmlTable();
+});
 
 function lpComputeRow(row){
   const item = row.raw;
   const qtd = item.qCom || 1;
   const unPorEmb = Math.max(row.unPorEmb||1, 1); // fracionamento: unidades dentro de cada embalagem
+  // Frete adicional pago à parte, rateado proporcional ao vProd
+  const freteManualTotal = parseBRLInput(document.getElementById('lpFreteManual')) || 0;
+  const sumVProd = lpXmlItemsState.reduce((s,r)=>s+(r.raw.vProd||0), 0) || 1;
+  const freteManualDoItem = freteManualTotal * ((item.vProd||0)/sumVProd);
+  // O frete pago à parte também integra a base do ICMS de entrada:
+  // recalcula a entrada somando o rateio ao vFrete do item.
+  const entradaCalc = freteManualDoItem > 0
+    ? computeIcmsEntradaLP(Object.assign({}, item, {vFrete:(item.vFrete||0)+freteManualDoItem}), row.emitUF, row.emitCRT)
+    : row.entrada;
   // Valores por embalagem (o que veio no XML)
   const valorEmbalagem = item.vUnCom;
   const descEmbalagem = (item.vDesc||0) / qtd;
-  const freteEmbalagem = (item.vFrete||0) / qtd;
-  const icmsEntradaEmbalagem = row.entrada.icms / qtd;
+  const freteXmlEmbalagem = (item.vFrete||0) / qtd;
+  const freteManualEmbalagem = freteManualDoItem / qtd;
+  const desonEmbalagem = (item.vICMSDeson||0) / qtd;
+  const icmsEntradaEmbalagem = entradaCalc.icms / qtd;
   // Valores por unidade final de venda (embalagem ÷ unidades por embalagem)
   const valorXmlUnit = valorEmbalagem / unPorEmb;
   const descUnit = descEmbalagem / unPorEmb;
-  const freteUnit = freteEmbalagem / unPorEmb;
+  const freteUnit = (freteXmlEmbalagem + freteManualEmbalagem) / unPorEmb;
+  const desonUnit = desonEmbalagem / unPorEmb;
   const icmsEntradaUnit = icmsEntradaEmbalagem / unPorEmb;
   const emitUF = row.emitUF;
 
-  // Crédito de ICMS na venda: por decisão do negócio, o LP aqui NÃO se credita do
-  // ICMS destacado na nota de entrada. Todo débito na venda vai integralmente para
-  // a apuração (regime cumulativo, na prática, mesmo tendo direito ao crédito).
-  const creditoIcmsUnit = 0;
+  // Crédito de ICMS na venda:
+  // - Se produto normal veio de fora do AC, a ANTECIPAÇÃO PARCIAL paga na entrada abate
+  //   o débito de ICMS na venda (é crédito por definição no RICMS).
+  // - Se ST ou cesta com encerramento: a entrada já encerrou a cadeia (não gera crédito abatível
+  //   no débito da venda — a entrada compõe custo e a venda não tem débito).
+  // - Se interna (origem AC): não teve pagamento na entrada, não há crédito.
+  const creditoIcmsUnit = (row.entrada.tipo === 'antecipacao') ? icmsEntradaUnit : 0;
 
-  // Custo de aquisição (inclui frete e ICMS de entrada quando ST/cesta com encerramento)
-  const custoAquisicaoUnit = valorXmlUnit - descUnit + freteUnit + icmsEntradaUnit;
+  // Custo = XML − desconto − ICMS desonerado + frete (XML + manual rateado) + ICMS de entrada
+  // ATENÇÃO: no caso de antecipação, o ICMS de entrada entra no custo aqui, mas depois
+  // é abatido do débito da venda (evita dupla contagem no CMV — feito abaixo).
+  const custoAquisicaoUnit = valorXmlUnit - descUnit - desonUnit + freteUnit + icmsEntradaUnit;
   const custoOperacionalValor = custoAquisicaoUnit * (row.custoOpPct||0)/100;
   const custoComOperacional = custoAquisicaoUnit + custoOperacionalValor;
 
@@ -1510,7 +1549,7 @@ function lpComputeRow(row){
   const isST = row.entrada.hasST;
   const isCesta = row.entrada.tipo === 'cesta';
   const icmsVendaRate = (isST || isCesta) ? 0 : ALIQ_INTERNA_AC/100;
-  const pisCofinsRate = item.mono ? 0 : (rates.pis + rates.cofins)/100;
+  const pisCofinsRate = row.entrada.mono ? 0 : (rates.pis + rates.cofins)/100;
   // IRPJ efetivo depende da receita bruta do trimestre (adicional 10% sobre lucro >R$60k/trim)
   const receitaTri = parseBRLInput(document.getElementById('lpReceitaTrimestre'));
   const irpjInfo = calcIrpjEffective(receitaTri);
@@ -1563,8 +1602,8 @@ function lpComputeRow(row){
     : (precoVenda ? lucroRS/precoVenda*100 : 0);
 
   return {
-    valorXmlUnit, descUnit, freteUnit, icmsEntradaUnit, creditoIcmsUnit,
-    custoComOperacional, precoVenda, lucroRS, lucroPctDisplay,
+    valorXmlUnit, descUnit, freteUnit, desonUnit, icmsEntradaUnit, creditoIcmsUnit,
+    custoAquisicaoUnit, custoComOperacional, precoVenda, lucroRS, lucroPctDisplay,
     icmsDebito, icmsLiquido, pisCofinsVenda, irpjCsll, tributosVenda, cmv,
     isST, isCesta,
   };
