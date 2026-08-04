@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Consulta NCM · Lucro Presumido · Acre</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.mini.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.min.js"></script>
 <style>
   :root{
     --ink:#182437;
@@ -252,12 +253,120 @@
   #auditItemsBody .badge-mini.audit-err{background:#fbe1de; color:#a03a2c;}
   #auditItemsBody td.diff{background:#fff8e1;}
   #auditItemsBody td.diff::after{content:' ✎'; color:#c48b1a; font-weight:bold;}
+
+  /* ---------- Autenticação ---------- */
+  body.auth-locked #appRoot{display:none;}
+  body.auth-ready #authGate{display:none;}
+  #authGate{
+    position:fixed; inset:0; z-index:9999; background:var(--ink);
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    overflow:auto;
+  }
+  .auth-card{
+    background:var(--paper-raised); border:1px solid var(--line); border-top:4px solid var(--gold);
+    border-radius:4px; width:100%; max-width:400px; padding:26px 24px;
+    box-shadow:0 18px 44px rgba(0,0,0,.35);
+  }
+  .auth-card .eyebrow{
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--gold); margin-bottom:6px;
+  }
+  .auth-card h2{font-family:var(--serif); font-size:22px; margin:0 0 4px;}
+  .auth-card .sub{font-size:12.5px; color:var(--ink-soft); margin:0 0 18px;}
+  .auth-tabs{display:flex; gap:0; margin-bottom:18px; border-bottom:1px solid var(--line);}
+  .auth-tabs button{
+    flex:1; background:transparent; color:var(--ink-soft); border:none; border-bottom:2px solid transparent;
+    border-radius:0; padding:9px 6px; font-size:13px; font-weight:600;
+  }
+  .auth-tabs button:hover{background:transparent; color:var(--ink);}
+  .auth-tabs button.active{color:var(--ink); border-bottom-color:var(--gold);}
+  .auth-field{margin-bottom:12px;}
+  .auth-field label{
+    display:block; font-size:11px; font-family:var(--mono); letter-spacing:.06em;
+    text-transform:uppercase; color:var(--ink-soft); margin-bottom:4px;
+  }
+  .auth-field input{
+    width:100%; font-family:var(--sans); font-size:14px; padding:10px 12px;
+    border:1.5px solid var(--line); border-radius:3px; background:#fff; color:var(--ink);
+  }
+  .auth-field input:focus{outline:2px solid var(--gold); outline-offset:1px; border-color:var(--ink);}
+  #authSubmit{width:100%; margin-top:6px; padding:12px;}
+  #authSubmit[disabled]{opacity:.6; cursor:not-allowed;}
+  .auth-msg{
+    font-size:12.5px; margin-top:14px; padding:10px 12px; border-radius:3px; display:none;
+    border:1px solid transparent;
+  }
+  .auth-msg.show{display:block;}
+  .auth-msg.err{background:var(--red-soft); border-color:#e0bdb5; color:var(--red);}
+  .auth-msg.ok{background:var(--green-soft); border-color:#bfd3c6; color:var(--green);}
+  .auth-foot{font-size:11.5px; color:var(--ink-soft); margin-top:16px; text-align:center;}
+  .auth-foot a{color:var(--gold); cursor:pointer; text-decoration:underline;}
+  .user-bar{
+    display:flex; align-items:center; justify-content:flex-end; gap:12px;
+    font-size:12px; color:#c7cedb; margin-bottom:10px; flex-wrap:wrap;
+  }
+  .user-bar .who{font-family:var(--mono); font-size:11.5px;}
+  .user-bar button{
+    background:transparent; border:1px solid rgba(255,255,255,.35); color:var(--paper);
+    padding:5px 12px; font-size:12px;
+  }
+  .user-bar button:hover{background:rgba(255,255,255,.12);}
+  @media print{ .user-bar{display:none;} }
 </style>
 </head>
-<body>
+<body class="auth-locked">
+
+<div id="authGate">
+  <div class="auth-card">
+    <div class="eyebrow">CPUSIS · Módulo Fiscal</div>
+    <h2>Consulta NCM — Lucro Presumido</h2>
+    <p class="sub">Acesso restrito. Entre com sua conta ou cadastre-se para usar a ferramenta.</p>
+
+    <div class="auth-tabs">
+      <button type="button" id="authTabLogin" class="active">Entrar</button>
+      <button type="button" id="authTabSignup">Criar conta</button>
+    </div>
+
+    <form id="authForm" autocomplete="on">
+      <div class="auth-field signup-only" style="display:none;">
+        <label for="authNome">Nome completo</label>
+        <input type="text" id="authNome" autocomplete="name" placeholder="Seu nome">
+      </div>
+      <div class="auth-field signup-only" style="display:none;">
+        <label for="authEmpresa">Empresa (opcional)</label>
+        <input type="text" id="authEmpresa" autocomplete="organization" placeholder="Razão social">
+      </div>
+      <div class="auth-field">
+        <label for="authEmail">E-mail</label>
+        <input type="email" id="authEmail" autocomplete="email" required placeholder="voce@empresa.com.br">
+      </div>
+      <div class="auth-field">
+        <label for="authSenha">Senha</label>
+        <input type="password" id="authSenha" autocomplete="current-password" required minlength="8" placeholder="Mínimo de 8 caracteres">
+      </div>
+      <div class="auth-field signup-only" style="display:none;">
+        <label for="authSenha2">Confirmar senha</label>
+        <input type="password" id="authSenha2" autocomplete="new-password" minlength="8" placeholder="Repita a senha">
+      </div>
+      <button type="submit" id="authSubmit">Entrar</button>
+    </form>
+
+    <div class="auth-msg" id="authMsg"></div>
+
+    <div class="auth-foot" id="authFoot">
+      Esqueceu a senha? <a id="authReset">Receber link de redefinição</a>
+    </div>
+  </div>
+</div>
+
+<div id="appRoot">
 
 <div class="masthead">
   <div class="wrap">
+    <div class="user-bar">
+      <span class="who" id="userWho"></span>
+      <button type="button" id="logoutBtn">Sair</button>
+    </div>
     <div class="eyebrow">CPUSIS · Módulo Fiscal · Lucro Presumido</div>
     <h1>Consulta NCM — Lucro Presumido (Acre)</h1>
     <p>Ferramenta exclusiva para empresas do <b>Lucro Presumido</b> no comércio: ICMS com débito/crédito, PIS/COFINS cumulativo (0,65% + 3%) ou não cumulativo, IRPJ e CSLL de presunção, e regras do RICMS/AC para compras interestaduais e cesta básica.</p>
@@ -505,6 +614,190 @@
 
   <div class="footer-note">Alíquota interna geral do Acre: 19% (Art. 17, I, RICMS/AC) · Ferramenta de apoio — validar com contador antes de aplicar em documentos fiscais.</div>
 </div>
+
+</div><!-- /appRoot -->
+
+<script>
+/* =========================================================
+   Autenticação (Supabase) — cadastro, login, sessão e logout
+   Projeto: FAROL-GUIA-LP
+   ========================================================= */
+(function(){
+  const SUPABASE_URL = 'https://kzbkusjjxgsqdpgffimp.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_XO-vnkPmQ6et88iEpFr5MQ_1QdJRR6x';
+
+  const gate      = document.getElementById('authGate');
+  const form      = document.getElementById('authForm');
+  const tabLogin  = document.getElementById('authTabLogin');
+  const tabSignup = document.getElementById('authTabSignup');
+  const submitBtn = document.getElementById('authSubmit');
+  const msgBox    = document.getElementById('authMsg');
+  const foot      = document.getElementById('authFoot');
+  const resetLink = document.getElementById('authReset');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const userWho   = document.getElementById('userWho');
+  const signupOnly= document.querySelectorAll('.signup-only');
+
+  const elNome    = document.getElementById('authNome');
+  const elEmpresa = document.getElementById('authEmpresa');
+  const elEmail   = document.getElementById('authEmail');
+  const elSenha   = document.getElementById('authSenha');
+  const elSenha2  = document.getElementById('authSenha2');
+
+  let modo = 'login';   // 'login' | 'signup'
+
+  function msg(texto, tipo){
+    msgBox.textContent = texto;
+    msgBox.className = 'auth-msg show ' + (tipo || 'err');
+  }
+  function limparMsg(){ msgBox.className = 'auth-msg'; msgBox.textContent = ''; }
+
+  if(!window.supabase || typeof window.supabase.createClient !== 'function'){
+    msg('Não foi possível carregar a biblioteca de autenticação. Verifique sua conexão e recarregue a página.', 'err');
+    return;
+  }
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
+
+  /* ---------- alternância entre entrar / criar conta ---------- */
+  function setModo(novo){
+    modo = novo;
+    limparMsg();
+    const ehCadastro = modo === 'signup';
+    tabLogin.classList.toggle('active', !ehCadastro);
+    tabSignup.classList.toggle('active', ehCadastro);
+    signupOnly.forEach(el => { el.style.display = ehCadastro ? '' : 'none'; });
+    elNome.required   = ehCadastro;
+    elSenha2.required = ehCadastro;
+    elSenha.setAttribute('autocomplete', ehCadastro ? 'new-password' : 'current-password');
+    submitBtn.textContent = ehCadastro ? 'Criar conta' : 'Entrar';
+    foot.style.display = ehCadastro ? 'none' : '';
+  }
+  tabLogin.addEventListener('click', () => setModo('login'));
+  tabSignup.addEventListener('click', () => setModo('signup'));
+
+  /* ---------- tradução das mensagens de erro ---------- */
+  function traduzErro(erro){
+    const m = (erro && erro.message ? erro.message : '').toLowerCase();
+    if(m.includes('invalid login credentials')) return 'E-mail ou senha incorretos.';
+    if(m.includes('email not confirmed'))       return 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.';
+    if(m.includes('user already registered'))   return 'Já existe uma conta com este e-mail. Use a aba "Entrar".';
+    if(m.includes('password should be at least')) return 'A senha deve ter no mínimo 8 caracteres.';
+    if(m.includes('rate limit') || m.includes('too many')) return 'Muitas tentativas. Aguarde alguns instantes e tente novamente.';
+    if(m.includes('unable to validate email') || m.includes('invalid email')) return 'E-mail inválido.';
+    return (erro && erro.message) ? erro.message : 'Não foi possível concluir a operação. Tente novamente.';
+  }
+
+  /* ---------- envio do formulário ---------- */
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    limparMsg();
+
+    const email = elEmail.value.trim();
+    const senha = elSenha.value;
+
+    if(senha.length < 8){ msg('A senha deve ter no mínimo 8 caracteres.', 'err'); return; }
+    if(modo === 'signup'){
+      if(!elNome.value.trim()){ msg('Informe seu nome completo.', 'err'); return; }
+      if(senha !== elSenha2.value){ msg('As senhas não conferem.', 'err'); return; }
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = modo === 'signup' ? 'Criando conta…' : 'Entrando…';
+
+    try{
+      if(modo === 'signup'){
+        const { data, error } = await sb.auth.signUp({
+          email, password: senha,
+          options: {
+            emailRedirectTo: window.location.href.split('#')[0],
+            data: { nome: elNome.value.trim(), empresa: elEmpresa.value.trim() }
+          }
+        });
+        if(error) throw error;
+        if(data.session){
+          await aplicarSessao(data.session);          // login automático
+        }else{
+          setModo('login');
+          msg('Conta criada. Enviamos um link de confirmação para ' + email + '. Confirme o e-mail e faça login.', 'ok');
+          elEmail.value = email;
+        }
+      }else{
+        const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
+        if(error) throw error;
+        await aplicarSessao(data.session);
+      }
+    }catch(erro){
+      msg(traduzErro(erro), 'err');
+    }finally{
+      submitBtn.disabled = false;
+      submitBtn.textContent = modo === 'signup' ? 'Criar conta' : 'Entrar';
+    }
+  });
+
+  /* ---------- redefinição de senha ---------- */
+  resetLink.addEventListener('click', async () => {
+    const email = elEmail.value.trim();
+    if(!email){ msg('Digite seu e-mail no campo acima para receber o link.', 'err'); return; }
+    limparMsg();
+    try{
+      const { error } = await sb.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.href.split('#')[0]
+      });
+      if(error) throw error;
+      msg('Se houver uma conta com este e-mail, o link de redefinição foi enviado.', 'ok');
+    }catch(erro){
+      msg(traduzErro(erro), 'err');
+    }
+  });
+
+  /* ---------- estado da sessão ---------- */
+  async function aplicarSessao(session){
+    if(!session || !session.user){ mostrarGate(); return; }
+    const user = session.user;
+    let rotulo = user.email || '';
+    try{
+      const { data: perfil } = await sb
+        .from('profiles')
+        .select('nome, empresa')
+        .eq('id', user.id)
+        .maybeSingle();
+      if(perfil && perfil.nome) rotulo = perfil.nome + ' · ' + (user.email || '');
+    }catch(_){ /* o rótulo com o e-mail já basta */ }
+
+    userWho.textContent = rotulo;
+    document.body.classList.remove('auth-locked');
+    document.body.classList.add('auth-ready');
+    limparMsg();
+    form.reset();
+  }
+
+  function mostrarGate(){
+    document.body.classList.add('auth-locked');
+    document.body.classList.remove('auth-ready');
+    userWho.textContent = '';
+  }
+
+  logoutBtn.addEventListener('click', async () => {
+    await sb.auth.signOut();
+    mostrarGate();
+    setModo('login');
+  });
+
+  // INITIAL_SESSION cobre o usuário que volta com sessão salva e o retorno
+  // do link de confirmação de e-mail. Chamadas ao banco são adiadas com
+  // setTimeout porque o supabase-js não permite outras chamadas dentro do callback.
+  sb.auth.onAuthStateChange((evento, session) => {
+    if(evento === 'SIGNED_OUT' || !session){ mostrarGate(); return; }
+    setTimeout(() => { aplicarSessao(session); }, 0);
+  });
+
+  setModo('login');
+  window.sbClient = sb;   // disponível para futuras integrações com o banco
+})();
+</script>
 
 <script>
 // ---------- Seed data ----------
@@ -1860,7 +2153,8 @@ document.getElementById('lpXmlPdfBtn').addEventListener('click', function(){
   openReportWindow(generateLPReport());
 });
 
-document.getElementById('liveStatus').textContent = 'Base embutida: ' + dbList.length.toLocaleString('pt-BR') + ' NCMs · ST/AC: ' + dbList.filter(r=>r.seg).length.toLocaleString('pt-BR') + ' · Monofásicos: ' + dbList.filter(r=>r.mono).length.toLocaleString('pt-BR');
+const liveStatusEl = document.getElementById('liveStatus');
+if(liveStatusEl) liveStatusEl.textContent = 'Base embutida: ' + dbList.length.toLocaleString('pt-BR') + ' NCMs · ST/AC: ' + dbList.filter(r=>r.seg).length.toLocaleString('pt-BR') + ' · Monofásicos: ' + dbList.filter(r=>r.mono).length.toLocaleString('pt-BR');
 
 // ---------- auditRegimeInfo: LUCRO PRESUMIDO ----------
 function auditRegimeInfo(rec, cesta){
