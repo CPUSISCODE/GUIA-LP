@@ -1,0 +1,89 @@
+<!--
+  Template do e-mail "Confirm signup" — GUIA-LP / FAROL-GUIA-LP
+  Cole em: Supabase → Authentication → Emails → Confirm signup → Message body
+  Assunto sugerido (campo "Subject heading"):
+      Confirme seu acesso — Consulta NCM Lucro Presumido
+
+  Variáveis disponíveis no template:
+      {{ .ConfirmationURL }}  link de confirmação
+      {{ .Token }}            código de 6 dígitos
+      {{ .Email }}            e-mail do usuário
+      {{ .SiteURL }}          Site URL configurada no projeto
+      {{ .Data.nome }}        metadados enviados no cadastro (nome, empresa)
+-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ea; margin:0; padding:28px 12px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px; background:#ffffff; border:1px solid #d8d2c4; border-radius:4px; overflow:hidden;">
+
+        <tr>
+          <td style="background:#182437; border-bottom:4px solid #a97a2f; padding:24px 28px;">
+            <div style="font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:#f0e3c8; padding-bottom:6px;">
+              CPUSIS · Módulo Fiscal
+            </div>
+            <div style="font-family:Georgia,'Times New Roman',serif; font-size:22px; font-weight:700; color:#ffffff;">
+              Consulta NCM — Lucro Presumido
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:28px;">
+            <p style="margin:0 0 14px; font-size:15px; color:#182437;">
+              Olá, {{ .Data.nome }}
+            </p>
+            <p style="margin:0 0 20px; font-size:14px; line-height:1.6; color:#3c4a5e;">
+              Recebemos um pedido de cadastro para <b>{{ .Email }}</b>.
+              Confirme o endereço no botão abaixo para liberar o acesso à ferramenta de
+              consulta de NCM, importação de XML e auditoria de cadastro.
+            </p>
+
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+              <tr>
+                <td style="background:#182437; border-radius:3px;">
+                  <a href="{{ .ConfirmationURL }}"
+                     style="display:inline-block; padding:13px 26px; font-size:14px; font-weight:600; color:#ffffff; text-decoration:none;">
+                    Confirmar meu acesso
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0 0 8px; font-size:12.5px; line-height:1.6; color:#3c4a5e;">
+              Se o botão não abrir, copie e cole este endereço no navegador:
+            </p>
+            <p style="margin:0 0 22px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11.5px; line-height:1.5; word-break:break-all; color:#a97a2f;">
+              {{ .ConfirmationURL }}
+            </p>
+
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ea; border:1px solid #d8d2c4; border-radius:3px;">
+              <tr>
+                <td style="padding:14px 16px;">
+                  <div style="font-family:ui-monospace,Menlo,Consolas,monospace; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:#3c4a5e; padding-bottom:6px;">
+                    Código de confirmação
+                  </div>
+                  <div style="font-family:ui-monospace,Menlo,Consolas,monospace; font-size:22px; letter-spacing:.18em; font-weight:700; color:#182437;">
+                    {{ .Token }}
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:20px 0 0; font-size:12.5px; line-height:1.6; color:#3c4a5e;">
+              O link vale por tempo limitado. Se você não solicitou este cadastro,
+              ignore esta mensagem — nenhuma conta será ativada.
+            </p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="background:#f4f1ea; border-top:1px solid #d8d2c4; padding:16px 28px; font-size:11px; line-height:1.6; color:#3c4a5e;">
+            Mensagem automática do sistema de acesso · CPUSIS<br>
+            Ferramenta de apoio — validar com contador antes de aplicar em documentos fiscais.
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
