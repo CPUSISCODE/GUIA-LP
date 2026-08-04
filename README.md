@@ -65,7 +65,30 @@ Em **Authentication → Providers → Email**, decida o fluxo de cadastro:
   para uso interno, porém sem validação de que o e-mail existe.
 
 > O envio de e-mails pelo servidor padrão do Supabase tem limite baixo de mensagens
-> por hora. Para uso real, configure um SMTP próprio em **Project Settings → Auth → SMTP**.
+> por hora, sai do remetente `noreply@mail.app.supabase.io` e costuma cair em spam.
+> Para uso real, configure um SMTP próprio em **Project Settings → Auth → SMTP**.
+
+### Personalizar o e-mail de confirmação
+
+O template em português está em [`supabase/templates/confirmacao-cadastro.html`](supabase/templates/confirmacao-cadastro.html).
+Para aplicá-lo, vá em **Authentication → Emails → Confirm signup** e:
+
+1. Em **Subject heading**, use: `Confirme seu acesso — Consulta NCM Lucro Presumido`
+2. Em **Message body**, cole o conteúdo do arquivo (sem o comentário do topo) e salve.
+
+O template usa as variáveis do Supabase `{{ .ConfirmationURL }}`, `{{ .Token }}`,
+`{{ .Email }}` e `{{ .Data.nome }}` — esta última vem do nome digitado no cadastro.
+Alterações no painel não são versionadas: ao mudar o e-mail por lá, atualize também
+o arquivo do repositório para os dois não divergirem.
+
+### Cadastro travado em "e-mail não confirmado"
+
+Enquanto `Confirm email` estiver ligado, o login retorna `Email not confirmed` até o
+usuário clicar no link. Para liberar uma conta manualmente:
+
+```sql
+update auth.users set email_confirmed_at = now() where email = 'usuario@dominio.com';
+```
 
 ## Executar localmente
 
