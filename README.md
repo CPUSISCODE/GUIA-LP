@@ -43,17 +43,21 @@ Tabela `public.profiles`, ligada a `auth.users` (`on delete cascade`):
 | `created_at` | `timestamptz` | default `now()` |
 | `updated_at` | `timestamptz` | atualizado por trigger |
 
-- **RLS habilitado**: cada usuário só lê e altera o próprio perfil, pelas policies
-  `"Usuários podem ver o próprio perfil"`, `"Usuários podem criar o próprio perfil"`
-  e `"Usuários podem atualizar o próprio perfil"`.
+- **RLS habilitado**: cada usuário só lê e altera o próprio perfil
+  (`profiles_select_own`, `profiles_insert_own`, `profiles_update_own`).
 - **Trigger `on_auth_user_created`**: cria o perfil automaticamente no cadastro,
   copiando `nome` e `empresa` dos metadados do usuário.
-- **Trigger `set_profiles_updated_at`**: mantém `updated_at` em dia.
+- **Trigger `profiles_set_updated_at`**: mantém `updated_at` em dia.
 
 O esquema está versionado em
-[`supabase/migrations/20260805142414_criar_tabela_profiles_com_rls_e_triggers.sql`](supabase/migrations/20260805142414_criar_tabela_profiles_com_rls_e_triggers.sql).
-Aplique-o com `supabase db push` ou colando o conteúdo no **SQL Editor** do painel.
+[`supabase/migrations/20260805142414_criar_tabela_profiles_com_rls_e_triggers.sql`](supabase/migrations/20260805142414_criar_tabela_profiles_com_rls_e_triggers.sql),
+como baseline idempotente do que já está aplicado no projeto **FAROL-GUIA-LP**.
 `nome` e `empresa` aparecem na barra de usuário no topo da página depois do login.
+
+> O GUIA-LP e o GUIA-SN usam **projetos Supabase separados** (`FAROL-GUIA-LP` e
+> `FAROL-GUIA-SN`), cada um com o seu próprio banco e os seus próprios usuários.
+> Os nomes de policy e de trigger diferem entre os dois e devem continuar assim —
+> não copie migrations de um repositório para o outro.
 
 ## Configuração necessária no painel do Supabase
 
