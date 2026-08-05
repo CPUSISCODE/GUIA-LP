@@ -1187,6 +1187,7 @@ function parseNFeXML(text){
   const icmsTotEls = totalEls.length ? totalEls[0].getElementsByTagName('ICMSTot') : [];
   const globalVFrete = icmsTotEls.length ? (parseFloat(getFirst('vFrete', icmsTotEls[0])) || 0) : 0;
   const globalVDesc = icmsTotEls.length ? (parseFloat(getFirst('vDesc', icmsTotEls[0])) || 0) : 0;
+  const globalVDeson = icmsTotEls.length ? (parseFloat(getFirst('vICMSDeson', icmsTotEls[0])) || 0) : 0;
 
   const sumVProd = items.reduce((s,it)=>s+it.vProd, 0) || 1;
   const sumItemDesc = items.reduce((s,it)=>s+it.vDesc, 0);
@@ -1197,8 +1198,13 @@ function parseNFeXML(text){
   if(sumItemFrete <= 0 && globalVFrete > 0){
     items.forEach(it => { it.vFrete = globalVFrete * (it.vProd/sumVProd); });
   }
+  // Desoneração informada só no total (ICMSTot) sem detalhe por item: rateia proporcional
+  const sumItemDeson = items.reduce((a,it)=>a+(it.vICMSDeson||0), 0);
+  if(sumItemDeson <= 0 && globalVDeson > 0){
+    items.forEach(it => { it.vICMSDeson = globalVDeson * (it.vProd/sumVProd); if(!it.motDesICMS) it.motDesICMS = '9'; });
+  }
 
-  return {emitUF, emitName, emitCRT, items, globalVFrete, globalVDesc};
+  return {emitUF, emitName, emitCRT, items, globalVFrete, globalVDesc, globalVDeson};
 }
 
 // (função legada computeIcmsEntradaXml removida — cálculo unificado em computeIcmsEntradaLP)
@@ -1905,7 +1911,7 @@ function lpComputeRow(row){
 function lpRenderXmlTable(){
   const tbody = document.getElementById('lpXmlItemsBody');
   tbody.innerHTML = '';
-  let tCompra=0, tIcms=0, tCredito=0, tVenda=0, tLucro=0, tCMV=0, tTribs=0;
+  let tCompra=0, tIcms=0, tCredito=0, tVenda=0, tLucro=0, tCMV=0, tTribs=0, tDesc=0, tDeson=0;
 
   // Painel informativo do IRPJ trimestral
   const receitaTri = parseBRLInput(document.getElementById('lpReceitaTrimestre'));
@@ -1928,6 +1934,8 @@ function lpRenderXmlTable(){
     const unPorEmb = Math.max(row.unPorEmb||1, 1);
     const qtdTotalUn = qtd * unPorEmb; // total de unidades finais de venda
     tCompra += item.vProd;
+    tDesc += item.vDesc||0;
+    tDeson += item.vICMSDeson||0;
     tIcms += row.entrada.icms;
     tCredito += c.creditoIcmsUnit * qtdTotalUn;
     tVenda += c.precoVenda * qtdTotalUn;
@@ -1941,20 +1949,24 @@ function lpRenderXmlTable(){
     else if(c.isST) cstIcms = '60';
     else cstIcms = '00';
     const regime = document.getElementById('lpRegimePisCofins').value;
-    const cstPis = item.mono ? '04' : (regime==='cumulativo' ? '01' : '50');
+    const cstPis = row.entrada.mono ? '04' : (regime==='cumulativo' ? '01' : '50');
 
     const badgeCls = c.isCesta ? 'deson' : (c.isST ? 'st' : 'normal');
     const badgeTxt = c.isCesta ? 'Cesta' : (c.isST ? 'ST' : 'Normal');
+    const desonerado = (item.vICMSDeson||0) > 0;
+    const motivo = MOTIVOS_DESONERACAO[item.motDesICMS] || ('motivo ' + item.motDesICMS);
     const custoOpInline = '<br><input type="number" class="cell-input lp-custoop-input" style="width:38px; padding:1px 3px; margin-top:1px;" data-idx="' + idx + '" value="' + row.custoOpPct + '" step="0.1">%';
 
     const tr = document.createElement('tr');
     tr.innerHTML =
       '<td class="prod-name">' + escapeHtml(item.xProd) + '<br><span class="hint" style="margin:0;">Cód: ' + escapeHtml(item.cProd) + '</span></td>' +
-      '<td class="num">' + formatNcm(normalize(item.ncm)) + '<br><span class="badge-mini ' + badgeCls + '">' + badgeTxt + '</span></td>' +
+      '<td class="num">' + formatNcm(normalize(item.ncm)) + '<br><span class="badge-mini ' + badgeCls + '">' + badgeTxt + '</span>' +
+        (desonerado ? '<br><span class="badge-mini deson" title="ICMS desonerado — ' + escapeHtml(motivo) + '">Desonerado</span>' : '') + '</td>' +
       '<td class="num">' + item.qCom + ' ' + escapeHtml(item.uCom||'') + '</td>' +
       '<td class="num"><input type="number" class="cell-input lp-frac-input" style="width:44px;" data-idx="' + idx + '" value="' + (row.unPorEmb||1) + '" step="1" min="1" title="Unidades dentro de cada embalagem (se você vende avulso o que veio em caixa)"></td>' +
       '<td class="num">' + brl(c.valorXmlUnit) + '</td>' +
-      '<td class="num">' + (c.descUnit ? brl(c.descUnit) : '—') + '</td>' +
+      '<td class="num">' + (c.descUnit ? brl(c.descUnit) : (c.desonUnit ? '' : '—')) +
+        (c.desonUnit ? '<span class="hint" style="margin:0; display:block;" title="ICMS desonerado abatido do valor de compra — ' + escapeHtml(motivo) + '">Deson: −' + brl(c.desonUnit) + '</span>' : '') + '</td>' +
       '<td class="num">' + (c.freteUnit ? brl(c.freteUnit) : '—') + '</td>' +
       '<td class="num">' + brl(row.entrada.icms) + '</td>' +
       '<td class="num">' + (c.creditoIcmsUnit > 0 ? brl(c.creditoIcmsUnit) : '—') + '</td>' +
@@ -1970,7 +1982,9 @@ function lpRenderXmlTable(){
   });
 
   document.getElementById('lpXmlTotals').innerHTML =
-    '<div>Total da compra<strong>' + brl(tCompra) + '</strong></div>' +
+    '<div>Total da compra (XML)<strong>' + brl(tCompra) + '</strong></div>' +
+    (tDeson > 0 ? '<div>ICMS desonerado (abatido)<strong>−' + brl(tDeson) + '</strong></div>' : '') +
+    ((tDesc > 0 || tDeson > 0) ? '<div>Compra líquida (pago)<strong>' + brl(tCompra - tDesc - tDeson) + '</strong></div>' : '') +
     '<div>ICMS entrada total<strong>' + brl(tIcms) + '</strong></div>' +
     '<div>Crédito ICMS aproveitável<strong>' + brl(tCredito) + '</strong></div>' +
     '<div>Tributos venda total<strong>' + brl(tTribs) + '</strong></div>' +
