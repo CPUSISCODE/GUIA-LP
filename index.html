@@ -255,62 +255,91 @@
   #auditItemsBody td.diff::after{content:' ✎'; color:#c48b1a; font-weight:bold;}
 
   /* ---------- Autenticação ---------- */
+  [hidden]{display:none !important;}
   body.auth-locked #appRoot{display:none;}
   body.auth-ready #authGate{display:none;}
   #authGate{
-    position:fixed; inset:0; z-index:9999; background:var(--ink);
-    display:flex; align-items:center; justify-content:center; padding:24px;
-    overflow:auto;
+    position:fixed; inset:0; z-index:9000; overflow-y:auto;
+    background:var(--ink);
+    background-image:
+      radial-gradient(circle at 15% -10%, rgba(169,122,47,.28), transparent 55%),
+      radial-gradient(circle at 90% 110%, rgba(63,102,80,.25), transparent 55%);
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:40px 20px;
   }
   .auth-card{
-    background:var(--paper-raised); border:1px solid var(--line); border-top:4px solid var(--gold);
-    border-radius:4px; width:100%; max-width:400px; padding:26px 24px;
-    box-shadow:0 18px 44px rgba(0,0,0,.35);
+    width:100%; max-width:430px; margin:auto;
+    background:var(--paper-raised); border:1px solid var(--line);
+    border-top:4px solid var(--gold); border-radius:4px;
+    box-shadow:0 18px 48px rgba(0,0,0,.35);
+    padding:26px 26px 22px;
   }
-  .auth-card .eyebrow{
-    font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  .auth-brand{margin-bottom:20px;}
+  .auth-brand .eyebrow{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
     color:var(--gold); margin-bottom:6px;
   }
-  .auth-card h2{font-family:var(--serif); font-size:22px; margin:0 0 4px;}
-  .auth-card .sub{font-size:12.5px; color:var(--ink-soft); margin:0 0 18px;}
-  .auth-tabs{display:flex; gap:0; margin-bottom:18px; border-bottom:1px solid var(--line);}
+  .auth-brand h1{font-family:var(--serif); font-size:22px; font-weight:700; margin:0 0 6px; line-height:1.25;}
+  .auth-brand p{margin:0; font-size:12.5px; color:var(--ink-soft);}
+
+  .auth-tabs{display:flex; gap:0; border-bottom:1px solid var(--line); margin-bottom:18px;}
   .auth-tabs button{
-    flex:1; background:transparent; color:var(--ink-soft); border:none; border-bottom:2px solid transparent;
-    border-radius:0; padding:9px 6px; font-size:13px; font-weight:600;
+    flex:1; background:transparent; color:var(--ink-soft); border:none;
+    border-bottom:2px solid transparent; border-radius:0;
+    font-size:13.5px; font-weight:600; padding:10px 8px;
   }
-  .auth-tabs button:hover{background:transparent; color:var(--ink);}
-  .auth-tabs button.active{color:var(--ink); border-bottom-color:var(--gold);}
-  .auth-field{margin-bottom:12px;}
-  .auth-field label{
-    display:block; font-size:11px; font-family:var(--mono); letter-spacing:.06em;
-    text-transform:uppercase; color:var(--ink-soft); margin-bottom:4px;
-  }
+  .auth-tabs button:hover{background:#f0ede4; color:var(--ink);}
+  .auth-tabs button.active{color:var(--ink); border-bottom-color:var(--gold); background:transparent;}
+
+  .auth-field{margin-bottom:13px;}
+  .auth-field label{display:block; font-size:12px; color:var(--ink-soft); margin-bottom:4px; font-weight:600;}
+  .auth-field .opcional{font-weight:400; color:#8a8578;}
   .auth-field input{
-    width:100%; font-family:var(--sans); font-size:14px; padding:10px 12px;
-    border:1.5px solid var(--line); border-radius:3px; background:#fff; color:var(--ink);
+    width:100%; font-family:var(--sans); font-size:14px; padding:10px 11px;
+    border:1px solid var(--line); border-radius:3px; background:#fdfcf9; color:var(--ink);
   }
-  .auth-field input:focus{outline:2px solid var(--gold); outline-offset:1px; border-color:var(--ink);}
-  #authSubmit{width:100%; margin-top:6px; padding:12px;}
-  #authSubmit[disabled]{opacity:.6; cursor:not-allowed;}
+  .auth-field input:focus{outline:2px solid var(--gold); outline-offset:1px; border-color:var(--gold);}
+  .auth-field .dica{font-size:11.5px; color:var(--ink-soft); margin-top:4px;}
+
+  .auth-submit{width:100%; padding:12px; font-size:14px; margin-top:4px;}
+  .auth-submit[disabled]{opacity:.6; cursor:progress;}
+  .auth-link{
+    display:block; width:100%; margin-top:12px; padding:6px; background:transparent;
+    border:none; color:var(--ink-soft); font-size:12.5px; font-weight:500;
+    text-decoration:underline; text-underline-offset:2px;
+  }
+  .auth-link:hover{background:transparent; color:var(--gold);}
+
   .auth-msg{
-    font-size:12.5px; margin-top:14px; padding:10px 12px; border-radius:3px; display:none;
-    border:1px solid transparent;
+    padding:11px 13px; border-radius:3px; font-size:12.5px; margin-bottom:16px;
+    border:1px solid; line-height:1.45;
   }
-  .auth-msg.show{display:block;}
-  .auth-msg.err{background:var(--red-soft); border-color:#e0bdb5; color:var(--red);}
-  .auth-msg.ok{background:var(--green-soft); border-color:#bfd3c6; color:var(--green);}
-  .auth-foot{font-size:11.5px; color:var(--ink-soft); margin-top:16px; text-align:center;}
-  .auth-foot a{color:var(--gold); cursor:pointer; text-decoration:underline;}
+  .auth-msg.erro{background:var(--red-soft); border-color:#d9b6ab; color:var(--red);}
+  .auth-msg.ok{background:var(--green-soft); border-color:#b9d0c0; color:var(--green);}
+  .auth-msg.info{background:var(--gold-soft); border-color:#d8bd85; color:#5c3f14;}
+
+  .auth-carregando{
+    text-align:center; padding:14px 0 4px; font-family:var(--mono);
+    font-size:12px; letter-spacing:.06em; color:var(--ink-soft);
+  }
+
   .user-bar{
-    display:flex; align-items:center; justify-content:flex-end; gap:12px;
-    font-size:12px; color:#c7cedb; margin-bottom:10px; flex-wrap:wrap;
+    background:#0f1926; color:#c7cedb;
+    border-bottom:1px solid rgba(255,255,255,.09);
+    font-size:12.5px;
   }
-  .user-bar .who{font-family:var(--mono); font-size:11.5px;}
+  .user-bar .wrap{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding-top:8px; padding-bottom:8px; flex-wrap:wrap;
+  }
+  .user-bar .quem{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; min-width:0;}
+  .user-bar .nome{color:var(--paper); font-weight:600;}
+  .user-bar .email{font-family:var(--mono); font-size:11.5px; opacity:.75; overflow-wrap:anywhere;}
   .user-bar button{
-    background:transparent; border:1px solid rgba(255,255,255,.35); color:var(--paper);
-    padding:5px 12px; font-size:12px;
+    background:transparent; border:1px solid rgba(255,255,255,.28); color:#dfe4ec;
+    padding:5px 12px; font-size:12px; flex:none;
   }
-  .user-bar button:hover{background:rgba(255,255,255,.12);}
+  .user-bar button:hover{background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.5);}
   @media print{ .user-bar{display:none;} }
 </style>
 </head>
@@ -318,55 +347,65 @@
 
 <div id="authGate">
   <div class="auth-card">
-    <div class="eyebrow">CPUSIS · Módulo Fiscal</div>
-    <h2>Consulta NCM — Lucro Presumido</h2>
-    <p class="sub">Acesso restrito. Entre com sua conta ou cadastre-se para usar a ferramenta.</p>
-
-    <div class="auth-tabs">
-      <button type="button" id="authTabLogin" class="active">Entrar</button>
-      <button type="button" id="authTabSignup">Criar conta</button>
+    <div class="auth-brand">
+      <div class="eyebrow">CPUSIS · Módulo Fiscal · Lucro Presumido</div>
+      <h1>Consulta NCM — Lucro Presumido (Acre)</h1>
+      <p>Acesso restrito. Entre com sua conta ou cadastre-se para usar a ferramenta.</p>
     </div>
 
-    <form id="authForm" autocomplete="on">
-      <div class="auth-field signup-only" style="display:none;">
-        <label for="authNome">Nome completo</label>
-        <input type="text" id="authNome" autocomplete="name" placeholder="Seu nome">
-      </div>
-      <div class="auth-field signup-only" style="display:none;">
-        <label for="authEmpresa">Empresa (opcional)</label>
-        <input type="text" id="authEmpresa" autocomplete="organization" placeholder="Razão social">
-      </div>
-      <div class="auth-field">
-        <label for="authEmail">E-mail</label>
-        <input type="email" id="authEmail" autocomplete="email" required placeholder="voce@empresa.com.br">
-      </div>
-      <div class="auth-field">
-        <label for="authSenha">Senha</label>
-        <input type="password" id="authSenha" autocomplete="current-password" required minlength="8" placeholder="Mínimo de 8 caracteres">
-      </div>
-      <div class="auth-field signup-only" style="display:none;">
-        <label for="authSenha2">Confirmar senha</label>
-        <input type="password" id="authSenha2" autocomplete="new-password" minlength="8" placeholder="Repita a senha">
-      </div>
-      <button type="submit" id="authSubmit">Entrar</button>
-    </form>
+    <div id="authCarregando" class="auth-carregando">Verificando acesso…</div>
 
-    <div class="auth-msg" id="authMsg"></div>
+    <div id="authConteudo" hidden>
+      <div class="auth-tabs">
+        <button type="button" id="authTabLogin" class="active">Entrar</button>
+        <button type="button" id="authTabSignup">Criar conta</button>
+      </div>
 
-    <div class="auth-foot" id="authFoot">
-      Esqueceu a senha? <a id="authReset">Receber link de redefinição</a>
+      <div class="auth-msg" id="authMsg" role="status" hidden></div>
+
+      <form id="authForm" autocomplete="on">
+        <div class="auth-field signup-only" style="display:none;">
+          <label for="authNome">Nome completo</label>
+          <input type="text" id="authNome" autocomplete="name" placeholder="Seu nome">
+        </div>
+        <div class="auth-field signup-only" style="display:none;">
+          <label for="authEmpresa">Empresa <span class="opcional">(opcional)</span></label>
+          <input type="text" id="authEmpresa" autocomplete="organization" placeholder="Razão social ou nome fantasia">
+        </div>
+        <div class="auth-field">
+          <label for="authEmail">E-mail</label>
+          <input type="email" id="authEmail" autocomplete="email" required placeholder="voce@empresa.com.br">
+        </div>
+        <div class="auth-field">
+          <label for="authSenha">Senha</label>
+          <input type="password" id="authSenha" autocomplete="current-password" required minlength="8" placeholder="Mínimo de 8 caracteres">
+          <div class="dica signup-only" style="display:none;">Use pelo menos 8 caracteres.</div>
+        </div>
+        <div class="auth-field signup-only" style="display:none;">
+          <label for="authSenha2">Confirmar senha</label>
+          <input type="password" id="authSenha2" autocomplete="new-password" minlength="8" placeholder="Repita a senha">
+        </div>
+        <button type="submit" id="authSubmit" class="auth-submit">Entrar</button>
+        <button type="button" id="authReset" class="auth-link">Esqueci minha senha</button>
+      </form>
     </div>
   </div>
 </div>
 
 <div id="appRoot">
 
+<div id="userBar" class="user-bar">
+  <div class="wrap">
+    <div class="quem">
+      <span class="nome" id="userBarNome">—</span>
+      <span class="email" id="userBarEmail"></span>
+    </div>
+    <button type="button" id="logoutBtn" class="small">Sair</button>
+  </div>
+</div>
+
 <div class="masthead">
   <div class="wrap">
-    <div class="user-bar">
-      <span class="who" id="userWho"></span>
-      <button type="button" id="logoutBtn">Sair</button>
-    </div>
     <div class="eyebrow">CPUSIS · Módulo Fiscal · Lucro Presumido</div>
     <h1>Consulta NCM — Lucro Presumido (Acre)</h1>
     <p>Ferramenta exclusiva para empresas do <b>Lucro Presumido</b> no comércio: ICMS com débito/crédito, PIS/COFINS cumulativo (0,65% + 3%) ou não cumulativo, IRPJ e CSLL de presunção, e regras do RICMS/AC para compras interestaduais e cesta básica.</p>
@@ -626,17 +665,19 @@
   const SUPABASE_URL = 'https://kzbkusjjxgsqdpgffimp.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_XO-vnkPmQ6et88iEpFr5MQ_1QdJRR6x';
 
-  const gate      = document.getElementById('authGate');
-  const form      = document.getElementById('authForm');
-  const tabLogin  = document.getElementById('authTabLogin');
-  const tabSignup = document.getElementById('authTabSignup');
-  const submitBtn = document.getElementById('authSubmit');
-  const msgBox    = document.getElementById('authMsg');
-  const foot      = document.getElementById('authFoot');
-  const resetLink = document.getElementById('authReset');
-  const logoutBtn = document.getElementById('logoutBtn');
-  const userWho   = document.getElementById('userWho');
-  const signupOnly= document.querySelectorAll('.signup-only');
+  const gate       = document.getElementById('authGate');
+  const carregando = document.getElementById('authCarregando');
+  const conteudo   = document.getElementById('authConteudo');
+  const form       = document.getElementById('authForm');
+  const tabLogin   = document.getElementById('authTabLogin');
+  const tabSignup  = document.getElementById('authTabSignup');
+  const submitBtn  = document.getElementById('authSubmit');
+  const msgBox     = document.getElementById('authMsg');
+  const resetLink  = document.getElementById('authReset');
+  const logoutBtn  = document.getElementById('logoutBtn');
+  const barNome    = document.getElementById('userBarNome');
+  const barEmail   = document.getElementById('userBarEmail');
+  const signupOnly = document.querySelectorAll('.signup-only');
 
   const elNome    = document.getElementById('authNome');
   const elEmpresa = document.getElementById('authEmpresa');
@@ -646,13 +687,23 @@
 
   let modo = 'login';   // 'login' | 'signup'
 
+  // 'err' é o rótulo usado no restante do arquivo; a classe visual é .erro.
   function msg(texto, tipo){
+    const classe = (tipo === 'err' || !tipo) ? 'erro' : tipo;
     msgBox.textContent = texto;
-    msgBox.className = 'auth-msg show ' + (tipo || 'err');
+    msgBox.className = 'auth-msg ' + classe;
+    msgBox.hidden = false;
   }
-  function limparMsg(){ msgBox.className = 'auth-msg'; msgBox.textContent = ''; }
+  function limparMsg(){ msgBox.className = 'auth-msg'; msgBox.textContent = ''; msgBox.hidden = true; }
+
+  // Revela o formulário. Enquanto não roda, o card mostra "Verificando acesso…".
+  function mostrarConteudo(){
+    carregando.hidden = true;
+    conteudo.hidden = false;
+  }
 
   if(!window.supabase || typeof window.supabase.createClient !== 'function'){
+    mostrarConteudo();
     msg('Não foi possível carregar a biblioteca de autenticação. Verifique sua conexão e recarregue a página.', 'err');
     return;
   }
@@ -673,7 +724,7 @@
     elSenha2.required = ehCadastro;
     elSenha.setAttribute('autocomplete', ehCadastro ? 'new-password' : 'current-password');
     submitBtn.textContent = ehCadastro ? 'Criar conta' : 'Entrar';
-    foot.style.display = ehCadastro ? 'none' : '';
+    resetLink.style.display = ehCadastro ? 'none' : '';
   }
   tabLogin.addEventListener('click', () => setModo('login'));
   tabSignup.addEventListener('click', () => setModo('signup'));
@@ -718,7 +769,8 @@
         });
         if(error) throw error;
         if(data.session){
-          await aplicarSessao(data.session);          // login automático
+          aplicarSessao(data.session);                // login automático
+          setTimeout(() => { carregarPerfil(data.session.user); }, 0);
         }else{
           setModo('login');
           msg('Conta criada. Enviamos um link de confirmação para ' + email + '. Confirme o e-mail e faça login.', 'ok');
@@ -727,7 +779,8 @@
       }else{
         const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
         if(error) throw error;
-        await aplicarSessao(data.session);
+        aplicarSessao(data.session);
+        if(data.session) setTimeout(() => { carregarPerfil(data.session.user); }, 0);
       }
     }catch(erro){
       msg(traduzErro(erro), 'err');
@@ -754,30 +807,49 @@
   });
 
   /* ---------- estado da sessão ---------- */
-  async function aplicarSessao(session){
-    if(!session || !session.user){ mostrarGate(); return; }
-    const user = session.user;
-    let rotulo = user.email || '';
-    try{
-      const { data: perfil } = await sb
-        .from('profiles')
-        .select('nome, empresa')
-        .eq('id', user.id)
-        .maybeSingle();
-      if(perfil && perfil.nome) rotulo = perfil.nome + ' · ' + (user.email || '');
-    }catch(_){ /* o rótulo com o e-mail já basta */ }
+  let perfilCarregadoDe = null;
 
-    userWho.textContent = rotulo;
+  // Preenche a barra com o que já veio no token, sem esperar o banco.
+  function aplicarSessao(session){
+    mostrarConteudo();
+    if(!session || !session.user){ mostrarGate(); return; }
+
+    const user = session.user;
+    const meta = user.user_metadata || {};
+    barEmail.textContent = user.email || '';
+    barNome.textContent  = meta.nome || (user.email || '').split('@')[0] || 'Usuário';
+
     document.body.classList.remove('auth-locked');
     document.body.classList.add('auth-ready');
     limparMsg();
     form.reset();
   }
 
+  // Consulta a tabela profiles e completa a barra com nome e empresa.
+  // Precisa rodar FORA do callback de onAuthStateChange — o supabase-js
+  // serializa as chamadas de auth e trava se um .from() sair de dentro dele.
+  async function carregarPerfil(user){
+    if(!user || perfilCarregadoDe === user.id) return;
+    perfilCarregadoDe = user.id;
+    try{
+      const { data: perfil, error } = await sb
+        .from('profiles')
+        .select('nome, empresa')
+        .eq('id', user.id)
+        .maybeSingle();
+      if(error || !perfil) return;
+      if(perfil.nome)    barNome.textContent  = perfil.nome;
+      if(perfil.empresa) barEmail.textContent = perfil.empresa + ' · ' + (user.email || '');
+    }catch(_){ /* a barra continua com o nome vindo dos metadados */ }
+  }
+
   function mostrarGate(){
+    mostrarConteudo();
     document.body.classList.add('auth-locked');
     document.body.classList.remove('auth-ready');
-    userWho.textContent = '';
+    perfilCarregadoDe = null;
+    barNome.textContent  = '—';
+    barEmail.textContent = '';
   }
 
   logoutBtn.addEventListener('click', async () => {
@@ -787,11 +859,17 @@
   });
 
   // INITIAL_SESSION cobre o usuário que volta com sessão salva e o retorno
-  // do link de confirmação de e-mail. Chamadas ao banco são adiadas com
+  // do link de confirmação de e-mail. A consulta ao banco é adiada com
   // setTimeout porque o supabase-js não permite outras chamadas dentro do callback.
   sb.auth.onAuthStateChange((evento, session) => {
     if(evento === 'SIGNED_OUT' || !session){ mostrarGate(); return; }
-    setTimeout(() => { aplicarSessao(session); }, 0);
+    aplicarSessao(session);
+    if(evento === 'PASSWORD_RECOVERY'){
+      msg('Você chegou pelo link de redefinição. Defina uma nova senha pelo painel do Supabase ou peça um novo link ao administrador.', 'info');
+    }
+    if(session.user){
+      setTimeout(() => { carregarPerfil(session.user); }, 0);
+    }
   });
 
   setModo('login');

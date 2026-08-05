@@ -43,11 +43,17 @@ Tabela `public.profiles`, ligada a `auth.users` (`on delete cascade`):
 | `created_at` | `timestamptz` | default `now()` |
 | `updated_at` | `timestamptz` | atualizado por trigger |
 
-- **RLS habilitado**: cada usuário só lê e altera o próprio perfil
-  (`profiles_select_own`, `profiles_insert_own`, `profiles_update_own`).
+- **RLS habilitado**: cada usuário só lê e altera o próprio perfil, pelas policies
+  `"Usuários podem ver o próprio perfil"`, `"Usuários podem criar o próprio perfil"`
+  e `"Usuários podem atualizar o próprio perfil"`.
 - **Trigger `on_auth_user_created`**: cria o perfil automaticamente no cadastro,
   copiando `nome` e `empresa` dos metadados do usuário.
-- **Trigger `profiles_set_updated_at`**: mantém `updated_at` em dia.
+- **Trigger `set_profiles_updated_at`**: mantém `updated_at` em dia.
+
+O esquema está versionado em
+[`supabase/migrations/20260805142414_criar_tabela_profiles_com_rls_e_triggers.sql`](supabase/migrations/20260805142414_criar_tabela_profiles_com_rls_e_triggers.sql).
+Aplique-o com `supabase db push` ou colando o conteúdo no **SQL Editor** do painel.
+`nome` e `empresa` aparecem na barra de usuário no topo da página depois do login.
 
 ## Configuração necessária no painel do Supabase
 
