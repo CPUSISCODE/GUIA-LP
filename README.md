@@ -54,6 +54,68 @@ O esquema está versionado em
 como baseline idempotente do que já está aplicado no projeto **FAROL-GUIA-LP**.
 `nome` e `empresa` aparecem na barra de usuário no topo da página depois do login.
 
+### Base fiscal de NCM
+
+A base não fica mais embutida no `index.html` — o arquivo caiu de 776 KB para 136 KB.
+Ela vive em duas tabelas, criadas por
+[`supabase/migrations/20260806132330_criar_tabelas_ncm_e_ncm_versao.sql`](supabase/migrations/20260806132330_criar_tabelas_ncm_e_ncm_versao.sql):
+
+`public.ncm` — 10.687 registros
+
+| coluna | tipo | observação |
+|---|---|---|
+| `ncm` | `text` | PK, `check (ncm ~ '^[0-9]{8}$')` |
+| `descricao` | `text` | não nulo |
+| `segmento` | `text` | segmento de ST do RICMS/AC; nulo fora da ST (2.052 preenchidos) |
+| `mva` | `numeric(6,2)` | MVA do segmento, em percentual |
+| `monofasico` | `text` | grupo monofásico de PIS/COFINS; nulo se não for (550 preenchidos) |
+
+`public.ncm_versao` — linha única
+
+| coluna | tipo | observação |
+|---|---|---|
+| `id` | `boolean` | PK `default true check (id)` — garante uma linha só |
+| `versao` | `text` | md5 do conteúdo inteiro de `public.ncm` |
+| `fonte` | `text` | de onde veio a carga |
+| `total` | `integer` | quantidade de registros |
+| `atualizado_em` | `timestamptz` | quando a versão mudou |
+
+- **RLS habilitado** nas duas: `select` liberado apenas para a role `authenticated`,
+  com `using (true)`. Sem policy de escrita — recarregar a base é tarefa do
+  `service_role`, fora do navegador.
+- **Trigger `ncm_atualiza_versao`**: statement-level em `public.ncm`, recalcula o md5 e
+  o total a cada `insert`/`update`/`delete`/`truncate`. É isso que impede a versão de
+  ficar atrasada em relação aos dados — e, portanto, impede um navegador de ficar preso
+  a um cache velho.
+- Índices parciais em `segmento` e `monofasico`, `where <coluna> is not null`.
+
+### Sincronização e cache no navegador
+
+Depois do login, junto com o carregamento do perfil, o app roda `sincronizarBase()`:
+
+1. Se houver cache no `localStorage` (`guialp.base.ncm.v1`), ele é aplicado **na hora** —
+   a ferramenta fica utilizável antes de qualquer conversa com o servidor.
+2. Só então o app lê `public.ncm_versao`. Versão igual à do cache: não baixa nada.
+   Diferente, ou sem cache: baixa em páginas de 1.000 registros (11 páginas hoje) e
+   regrava o cache, que ocupa cerca de 1,3 MB.
+3. Sem rede: com cache, segue funcionando offline e o status avisa; sem cache, aparece
+   um pedido para conectar e recarregar a página.
+
+O laço de download tem teto de 40 páginas: se o servidor ignorar a paginação e devolver
+sempre uma página cheia, a sincronização para com erro em vez de martelar a API.
+
+Enquanto a base não chega, busca, importação de XML e auditoria avisam que ela ainda está
+carregando, em vez de responder "NCM não encontrado" — que seria mentira.
+
+Para recarregar a base, ver [`supabase/seed/README.md`](supabase/seed/README.md).
+
+> **O que o login protege, e o que não protege.** Sem sessão válida, o `select` em
+> `public.ncm` é negado pelo RLS: a base fiscal em si passa a ser de acesso controlado.
+> Mas o `index.html` continua sendo um arquivo estático público, com a lógica de cálculo
+> à vista no código-fonte; e, uma vez sincronizada, a base fica no `localStorage` daquele
+> navegador inclusive depois do logout — é o preço de funcionar offline. O login controla
+> quem **obtém** a base, não o que a pessoa faz com ela depois.
+
 > O GUIA-LP e o GUIA-SN usam **projetos Supabase separados** (`FAROL-GUIA-LP` e
 > `FAROL-GUIA-SN`), cada um com o seu próprio banco e os seus próprios usuários.
 > Os nomes de policy e de trigger diferem entre os dois e devem continuar assim —
@@ -114,5 +176,5 @@ Supabase para os links de e-mail funcionarem no ambiente local.
 
 ## Dependências (via CDN)
 
-- `@supabase/supabase-js` 2.58.0 — autenticação
+- `@supabase/supabase-js` 2.58.0 — autenticação e leitura da base de NCM
 - `xlsx` 0.18.5 — importação de planilhas
