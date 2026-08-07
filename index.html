@@ -341,6 +341,131 @@
   }
   .user-bar button:hover{background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.5);}
   @media print{ .user-bar{display:none;} }
+
+  /* ---------- Situação da conta (não aprovada / bloqueada / limite) ---------- */
+  body.sem-acesso .tabs,
+  body.sem-acesso .tab-page,
+  body.sem-acesso .footer-note{display:none !important;}
+  #telaSituacao{
+    background:var(--paper-raised); border:1px solid var(--line); border-top:4px solid var(--gold);
+    border-radius:4px; margin-top:-16px; padding:28px 24px; text-align:center;
+    box-shadow:0 6px 18px rgba(24,36,55,.08);
+  }
+  #telaSituacao .icone{font-size:34px; line-height:1; margin-bottom:10px;}
+  #telaSituacao h2{font-family:var(--serif); font-size:22px; margin:0 0 8px;}
+  #telaSituacao p{font-size:13.5px; color:var(--ink-soft); margin:0 auto 8px; max-width:520px; line-height:1.6;}
+  #telaSituacao .quem-avisar{
+    font-size:12px; color:var(--ink-soft); margin-top:16px; padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+
+  /* ---------- Administração ---------- */
+  .adm-subtabs{display:flex; gap:0; border-bottom:1px solid var(--line); margin-bottom:16px;}
+  .adm-subtabs button{
+    background:transparent; color:var(--ink-soft); border:none; border-bottom:2px solid transparent;
+    border-radius:0; padding:9px 16px; font-size:13px; font-weight:600;
+  }
+  .adm-subtabs button:hover{background:transparent; color:var(--ink);}
+  .adm-subtabs button.active{color:var(--ink); border-bottom-color:var(--gold);}
+  .adm-cartoes{display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:16px;}
+  .adm-cartao{
+    background:var(--paper-raised); border:1px solid var(--line); border-radius:4px; padding:12px 14px;
+  }
+  .adm-cartao .rotulo{
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-soft); margin-bottom:4px;
+  }
+  .adm-cartao .valor{font-family:var(--serif); font-size:24px; font-weight:700;}
+  .adm-cartao.ok .valor{color:var(--green);}
+  .adm-cartao.pend .valor{color:var(--gold);}
+  .adm-cartao.no .valor{color:var(--red);}
+  .adm-filtros{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px;}
+  .adm-filtros input[type=text]{
+    flex:1 1 240px; font-size:13.5px; padding:9px 12px;
+    border:1.5px solid var(--line); border-radius:3px; background:#fff; color:var(--ink);
+  }
+  .adm-filtros input[type=text]:focus{outline:2px solid var(--gold); outline-offset:1px;}
+  .adm-filtros select{
+    font-size:13.5px; padding:9px 10px; border:1.5px solid var(--line);
+    border-radius:3px; background:#fff; color:var(--ink);
+  }
+  .adm-tabela-wrap{
+    background:var(--paper-raised); border:1px solid var(--line); border-radius:4px;
+    overflow-x:auto; max-height:520px; overflow-y:auto;
+  }
+  .adm-tabela{border-collapse:collapse; width:100%; font-size:12.5px; min-width:860px;}
+  .adm-tabela th{
+    position:sticky; top:0; z-index:1; background:var(--ink); color:var(--paper);
+    text-align:left; padding:9px 10px; font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    font-family:var(--mono); font-weight:600; cursor:pointer; white-space:nowrap;
+  }
+  .adm-tabela th:hover{background:#0f1926;}
+  .adm-tabela th .seta{opacity:.5; font-size:9px; margin-left:3px;}
+  .adm-tabela td{padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:middle;}
+  .adm-tabela tbody tr{cursor:pointer;}
+  .adm-tabela tbody tr:hover{background:var(--gold-soft);}
+  .adm-tabela tbody tr.sel{background:var(--gold-soft); box-shadow:inset 3px 0 0 var(--gold);}
+  .adm-tabela .num{text-align:right; font-family:var(--mono);}
+  .adm-vazio{padding:22px; text-align:center; color:var(--ink-soft); font-size:13px;}
+  .pill{
+    display:inline-block; font-size:10.5px; font-weight:600; padding:2px 8px; border-radius:10px;
+    white-space:nowrap; letter-spacing:.02em;
+  }
+  .pill.ok{background:var(--green-soft); color:var(--green);}
+  .pill.pend{background:var(--gold-soft); color:var(--gold);}
+  .pill.no{background:var(--red-soft); color:var(--red);}
+  .pill.adm{background:#e2e8f5; color:#31456b;}
+  .adm-detalhe{
+    background:var(--paper-raised); border:1px solid var(--line); border-radius:4px;
+    margin-top:14px; padding:18px 20px;
+  }
+  .adm-detalhe h3{font-family:var(--serif); font-size:18px; margin:0 0 2px;}
+  .adm-detalhe .sub{font-family:var(--mono); font-size:11.5px; color:var(--ink-soft); margin-bottom:14px; overflow-wrap:anywhere;}
+  .adm-dados{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px 16px; margin-bottom:16px;
+  }
+  .adm-dados .d .k{
+    font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .adm-dados .d .v{font-size:13px;}
+  .adm-acoes{display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding-top:14px; border-top:1px solid var(--line);}
+  .adm-acoes input[type=number]{
+    width:64px; font-size:13px; padding:7px 8px; border:1.5px solid var(--line); border-radius:3px;
+  }
+  .adm-lista{margin-top:16px; padding-top:14px; border-top:1px solid var(--line);}
+  .adm-lista h4{
+    font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ink-soft); margin:0 0 8px;
+  }
+  .adm-item{
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    padding:8px 0; border-bottom:1px solid var(--line); font-size:12.5px;
+  }
+  .adm-item:last-child{border-bottom:none;}
+  .adm-item .quando{font-family:var(--mono); font-size:11.5px; color:var(--ink-soft); white-space:nowrap;}
+  .adm-item.excedente{background:var(--red-soft); margin:0 -8px; padding:8px; border-radius:3px;}
+  .adm-msg{font-size:12.5px; padding:9px 12px; border-radius:3px; margin-top:12px; display:none;}
+  .adm-msg.show{display:block;}
+  .adm-msg.ok{background:var(--green-soft); color:var(--green); border:1px solid #bfd3c6;}
+  .adm-msg.err{background:var(--red-soft); color:var(--red); border:1px solid #e0bdb5;}
+  .adm-api h4{font-family:var(--serif); font-size:15px; margin:18px 0 6px;}
+  .adm-api code, .adm-api pre{font-family:var(--mono); font-size:11.5px;}
+  .adm-api pre{
+    background:var(--ink); color:#e8edf5; padding:12px 14px; border-radius:3px;
+    overflow-x:auto; margin:6px 0 0;
+  }
+  .adm-api .rota{
+    display:flex; gap:8px; align-items:baseline; padding:7px 0; border-bottom:1px solid var(--line);
+    font-size:12.5px; flex-wrap:wrap;
+  }
+  .adm-api .rota .metodo{
+    font-family:var(--mono); font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:3px;
+    background:var(--ink); color:#fff;
+  }
+  .adm-api .rota .metodo.post{background:var(--green);}
+  .adm-api .rota .metodo.patch{background:var(--gold);}
+  .adm-api .rota .metodo.del{background:var(--red);}
 </style>
 </head>
 <body class="auth-locked">
@@ -414,10 +539,18 @@
 
 <div class="wrap">
 
+  <div id="telaSituacao" hidden>
+    <div class="icone" id="situacaoIcone">⏳</div>
+    <h2 id="situacaoTitulo">Cadastro em análise</h2>
+    <p id="situacaoTexto"></p>
+    <div class="quem-avisar">Dúvidas sobre o acesso? Fale com o administrador da sua empresa.</div>
+  </div>
+
   <div class="tabs">
     <button id="tabBtnLP" class="active">Consulta NCM &amp; XML</button>
     <button id="tabBtnAudit">Auditoria de Cadastro</button>
     <button id="tabBtnCustoOp">Custo Operacional</button>
+    <button id="tabBtnAdmin" hidden>Administração</button>
   </div>
 
 
@@ -652,6 +785,101 @@
   </div><!-- /pageAudit -->
 
 
+  <!-- ============================================================ -->
+  <!--                     ADMINISTRAÇÃO                             -->
+  <!-- ============================================================ -->
+  <div id="pageAdmin" class="tab-page">
+    <div class="search-block" style="margin-top:0;">
+      <h2 style="font-family:var(--serif); font-size:20px; margin:0 0 6px;">Administração de acessos</h2>
+      <p style="font-size:12.5px; color:var(--ink-soft); margin:0;">Quem pode usar a ferramenta, de quantos aparelhos e com que frequência. A aprovação vale no banco: sem ela o servidor recusa a base fiscal, não é só aviso na tela.</p>
+    </div>
+
+    <div class="adm-subtabs" style="margin-top:16px;">
+      <button type="button" id="admSubUsuarios" class="active">Usuários</button>
+      <button type="button" id="admSubApi">API</button>
+    </div>
+
+    <div id="admPainelUsuarios">
+      <div class="adm-cartoes">
+        <div class="adm-cartao"><div class="rotulo">Total</div><div class="valor" id="admTotal">—</div></div>
+        <div class="adm-cartao ok"><div class="rotulo">Aprovados</div><div class="valor" id="admAprovados">—</div></div>
+        <div class="adm-cartao pend"><div class="rotulo">Aguardando</div><div class="valor" id="admAguardando">—</div></div>
+        <div class="adm-cartao no"><div class="rotulo">Bloqueados</div><div class="valor" id="admBloqueados">—</div></div>
+        <div class="adm-cartao"><div class="rotulo">Administradores</div><div class="valor" id="admAdmins">—</div></div>
+      </div>
+
+      <div class="adm-filtros">
+        <input type="text" id="admBusca" placeholder="Buscar por nome, e-mail ou empresa…" autocomplete="off">
+        <select id="admFiltro">
+          <option value="todos">Todas as situações</option>
+          <option value="aprovados">Aprovados</option>
+          <option value="aguardando">Aguardando aprovação</option>
+          <option value="bloqueados">Bloqueados</option>
+          <option value="admins">Administradores</option>
+          <option value="excedentes">Acima do limite de aparelhos</option>
+        </select>
+        <button type="button" class="ghost small" id="admRecarregar">Recarregar</button>
+        <button type="button" class="ghost small" id="admExportar">⬇ CSV</button>
+      </div>
+
+      <div class="adm-tabela-wrap">
+        <table class="adm-tabela">
+          <thead>
+            <tr>
+              <th data-col="nome">Nome</th>
+              <th data-col="email">E-mail</th>
+              <th data-col="empresa">Empresa</th>
+              <th data-col="situacao">Situação</th>
+              <th data-col="total_dispositivos" class="num">Aparelhos</th>
+              <th data-col="total_acessos" class="num">Acessos</th>
+              <th data-col="ultimo_login">Último login</th>
+              <th data-col="criado_em">Cadastro</th>
+            </tr>
+          </thead>
+          <tbody id="admCorpo"></tbody>
+        </table>
+        <div class="adm-vazio" id="admVazio" hidden>Nenhum usuário encontrado com esses filtros.</div>
+      </div>
+
+      <div id="admDetalhe"></div>
+    </div>
+
+    <div id="admPainelApi" hidden>
+      <div class="adm-detalhe">
+        <h3>API REST</h3>
+        <div class="sub">Os endpoints abaixo já são expostos pelo PostgREST do Supabase. Todos exigem o cabeçalho <code>apikey</code> com a chave publicável e o <code>Authorization: Bearer &lt;access_token&gt;</code> da sessão. O RLS e as funções aplicam as mesmas regras do painel — chamar por fora não dá mais poder a ninguém.</div>
+
+        <h4>Base fiscal</h4>
+        <div class="rota"><span class="metodo">GET</span><code>/rest/v1/ncm?select=ncm,descricao,segmento,mva,monofasico&amp;order=ncm&amp;offset=0&amp;limit=1000</code></div>
+        <div class="rota"><span class="metodo">GET</span><code>/rest/v1/ncm?ncm=eq.22030000</code></div>
+        <div class="rota"><span class="metodo">GET</span><code>/rest/v1/ncm_versao?select=versao,total,atualizado_em</code></div>
+        <p style="font-size:12px; color:var(--ink-soft); margin:8px 0 0;">Só respondem para conta aprovada e não bloqueada; caso contrário voltam zero linhas.</p>
+
+        <h4>Perfil</h4>
+        <div class="rota"><span class="metodo">GET</span><code>/rest/v1/profiles?select=*</code></div>
+        <div class="rota"><span class="metodo patch">PATCH</span><code>/rest/v1/profiles?id=eq.&lt;uuid&gt;</code></div>
+        <p style="font-size:12px; color:var(--ink-soft); margin:8px 0 0;">Usuário comum enxerga e altera só o próprio registro, e nunca os campos <code>aprovado</code>, <code>bloqueado</code>, <code>limite_dispositivos</code> e <code>observacao</code> — um trigger recusa. Administrador enxerga e altera todos.</p>
+
+        <h4>Aparelhos e acessos</h4>
+        <div class="rota"><span class="metodo">GET</span><code>/rest/v1/dispositivos?user_id=eq.&lt;uuid&gt;</code></div>
+        <div class="rota"><span class="metodo post">POST</span><code>/rest/v1/dispositivos</code></div>
+        <div class="rota"><span class="metodo del">DELETE</span><code>/rest/v1/dispositivos?id=eq.&lt;uuid&gt;</code></div>
+        <div class="rota"><span class="metodo">GET</span><code>/rest/v1/acessos?user_id=eq.&lt;uuid&gt;&amp;order=quando.desc</code></div>
+        <p style="font-size:12px; color:var(--ink-soft); margin:8px 0 0;">O POST passa pelo trigger de limite de aparelhos e volta <code>42501</code> quando estoura. Remover aparelho é ação de administrador.</p>
+
+        <h4>Funções do painel</h4>
+        <div class="rota"><span class="metodo post">POST</span><code>/rest/v1/rpc/listar_usuarios</code></div>
+        <div class="rota"><span class="metodo post">POST</span><code>/rest/v1/rpc/promover_admin</code> <span style="color:var(--ink-soft);">corpo: <code>{"p_email":"pessoa@empresa.com"}</code></span></div>
+        <div class="rota"><span class="metodo post">POST</span><code>/rest/v1/rpc/rebaixar_admin</code> <span style="color:var(--ink-soft);">corpo: <code>{"p_id":"&lt;uuid&gt;"}</code></span></div>
+        <p style="font-size:12px; color:var(--ink-soft); margin:8px 0 0;">As três checam administrador na primeira linha e devolvem <code>42501</code> para qualquer outro chamador.</p>
+
+        <h4>Exemplo</h4>
+        <pre id="admExemplo">carregando…</pre>
+      </div>
+    </div>
+  </div><!-- /pageAdmin -->
+
+
   <div class="footer-note">Alíquota interna geral do Acre: 19% (Art. 17, I, RICMS/AC) · Ferramenta de apoio — validar com contador antes de aplicar em documentos fiscais.</div>
 </div>
 
@@ -771,7 +999,7 @@
         if(error) throw error;
         if(data.session){
           aplicarSessao(data.session);                // login automático
-          setTimeout(() => { carregarPerfil(data.session.user); }, 0);
+          setTimeout(() => { aoEntrar(data.session.user); }, 0);
         }else{
           setModo('login');
           msg('Conta criada. Enviamos um link de confirmação para ' + email + '. Confirme o e-mail e faça login.', 'ok');
@@ -781,7 +1009,9 @@
         const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
         if(error) throw error;
         aplicarSessao(data.session);
-        if(data.session) setTimeout(() => { carregarPerfil(data.session.user); }, 0);
+        // aoEntrar é idempotente: se o evento SIGNED_IN chegar primeiro, esta
+        // chamada retorna na guarda em vez de repetir tudo.
+        if(data.session) setTimeout(() => { aoEntrar(data.session.user); }, 0);
       }
     }catch(erro){
       msg(traduzErro(erro), 'err');
@@ -830,18 +1060,25 @@
   // Precisa rodar FORA do callback de onAuthStateChange — o supabase-js
   // serializa as chamadas de auth e trava se um .from() sair de dentro dele.
   async function carregarPerfil(user){
-    if(!user || perfilCarregadoDe === user.id) return;
+    if(!user) return null;
     perfilCarregadoDe = user.id;
     try{
       const { data: perfil, error } = await sb
         .from('profiles')
-        .select('nome, empresa')
+        .select('nome, empresa, aprovado, bloqueado, limite_dispositivos')
         .eq('id', user.id)
         .maybeSingle();
-      if(error || !perfil) return;
+      // O supabase-js devolve {error} em vez de lançar. Falha de rede não é
+      // "perfil inexistente": confundir os dois faria quem está offline com
+      // cache válido cair na tela de "cadastro em análise".
+      if(error) return { indisponivel: true };
+      if(!perfil) return null;
       if(perfil.nome)    barNome.textContent  = perfil.nome;
       if(perfil.empresa) barEmail.textContent = perfil.empresa + ' · ' + (user.email || '');
-    }catch(_){ /* a barra continua com o nome vindo dos metadados */ }
+      return perfil;
+    }catch(_){
+      return { indisponivel: true };
+    }
   }
 
   /* ---------- base fiscal: sincronização e cache ---------- */
@@ -934,8 +1171,487 @@
     return sincronizacaoEmCurso;
   }
 
+  /* ---------- situação da conta ---------- */
+  const telaSituacao = document.getElementById('telaSituacao');
+  const SITUACOES = {
+    aguardando: {
+      icone: '⏳',
+      titulo: 'Cadastro em análise',
+      texto: 'Sua conta foi criada, mas ainda precisa ser liberada por um administrador. Assim que isso acontecer, a ferramenta abre normalmente — basta recarregar a página.'
+    },
+    bloqueado: {
+      icone: '⛔',
+      titulo: 'Acesso suspenso',
+      texto: 'O acesso desta conta foi suspenso por um administrador. Enquanto durar a suspensão, a consulta à base fiscal fica indisponível.'
+    },
+    limite: {
+      icone: '📵',
+      titulo: 'Limite de aparelhos atingido',
+      texto: 'Esta conta já está em uso no número máximo de aparelhos autorizados. Para entrar deste aparelho, peça a um administrador que aumente o limite ou libere um dos aparelhos já cadastrados.'
+    }
+  };
+
+  function mostrarSituacao(qual){
+    if(!qual){
+      telaSituacao.hidden = true;
+      document.body.classList.remove('sem-acesso');
+      return;
+    }
+    const s = SITUACOES[qual];
+    document.getElementById('situacaoIcone').textContent  = s.icone;
+    document.getElementById('situacaoTitulo').textContent = s.titulo;
+    document.getElementById('situacaoTexto').textContent  = s.texto;
+    telaSituacao.hidden = false;
+    document.body.classList.add('sem-acesso');
+  }
+
+  /* ---------- aparelho e registro de acesso ---------- */
+  // A "impressão" é um id aleatório que este navegador guarda para si. Não é
+  // fingerprinting: não identifica o aparelho fora desta ferramenta.
+  const CHAVE_APARELHO = 'guialp.aparelho.v1';
+
+  function obterImpressao(){
+    try{
+      let imp = localStorage.getItem(CHAVE_APARELHO);
+      if(!imp){
+        imp = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2));
+        localStorage.setItem(CHAVE_APARELHO, imp);
+      }
+      return imp;
+    }catch(_){
+      return 'sem-armazenamento';
+    }
+  }
+
+  function descreverAparelho(){
+    const ua = navigator.userAgent || '';
+    let tipo = 'computador';
+    if(/iPad|Tablet|PlayBook|Silk|(Android(?!.*Mobile))/i.test(ua)) tipo = 'tablet';
+    else if(/Mobi|Android|iPhone|iPod|Windows Phone/i.test(ua)) tipo = 'celular';
+    else if(!ua) tipo = 'desconhecido';
+
+    let navegador = 'Outro';
+    if(/Edg\//.test(ua)) navegador = 'Edge';
+    else if(/OPR\/|Opera/.test(ua)) navegador = 'Opera';
+    else if(/Chrome\//.test(ua)) navegador = 'Chrome';
+    else if(/Firefox\//.test(ua)) navegador = 'Firefox';
+    else if(/Safari\//.test(ua)) navegador = 'Safari';
+
+    let sistema = 'Outro';
+    if(/Windows/.test(ua)) sistema = 'Windows';
+    else if(/Android/.test(ua)) sistema = 'Android';
+    else if(/iPhone|iPad|iPod/.test(ua)) sistema = 'iOS';
+    else if(/Mac OS X/.test(ua)) sistema = 'macOS';
+    else if(/Linux/.test(ua)) sistema = 'Linux';
+
+    let fuso = '';
+    try{ fuso = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }catch(_){ }
+
+    return { tipo, navegador, sistema, fuso, user_agent: ua.slice(0, 400) };
+  }
+
+  // Tenta o update primeiro e só insere se nada for atualizado: é o insert que
+  // passa pelo trigger de limite, então aparelho já conhecido nunca é barrado.
+  async function registrarAcesso(user){
+    const impressao = obterImpressao();
+    const info = descreverAparelho();
+    const agora = new Date().toISOString();
+    let dispositivoId = null;
+
+    try{
+      const { data: atualizados } = await sb
+        .from('dispositivos')
+        .update({ ultimo_acesso: agora, tipo: info.tipo, navegador: info.navegador,
+                  sistema: info.sistema, fuso: info.fuso, user_agent: info.user_agent })
+        .eq('user_id', user.id)
+        .eq('impressao', impressao)
+        .select('id');
+
+      if(atualizados && atualizados.length){
+        dispositivoId = atualizados[0].id;
+      }else{
+        const { data: inserido, error } = await sb
+          .from('dispositivos')
+          .insert({ user_id: user.id, impressao: impressao, tipo: info.tipo,
+                    navegador: info.navegador, sistema: info.sistema, fuso: info.fuso,
+                    user_agent: info.user_agent })
+          .select('id')
+          .maybeSingle();
+        // Só é limite quando o servidor DISSE que é limite. Erro de rede aqui
+        // trancaria fora quem está apenas sem conexão.
+        if(error){
+          const codigo = String(error.code || '');
+          const ehLimite = codigo === '42501' || /limite/i.test(error.message || '');
+          return ehLimite ? { ok: false, motivo: 'limite' } : { ok: true };
+        }
+        dispositivoId = inserido ? inserido.id : null;
+      }
+
+      await sb.from('acessos').insert({
+        user_id: user.id, dispositivo_id: dispositivoId, tipo: 'login', fuso: info.fuso
+      });
+      return { ok: true };
+    }catch(_){
+      return { ok: true };   // sem rede: não trava quem já está liberado
+    }
+  }
+
+  /* ---------- painel de administração ---------- */
+  const admBotaoAba = document.getElementById('tabBtnAdmin');
+  let admUsuarios = [];
+  let admOrdem = { col: 'criado_em', dir: 1 };
+  let admSelecionado = null;
+  let ehAdmin = false;
+
+  const esc = s => String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  function dataBR(v, comHora){
+    if(!v) return '—';
+    const d = new Date(v);
+    if(isNaN(d)) return '—';
+    return comHora ? d.toLocaleString('pt-BR') : d.toLocaleDateString('pt-BR');
+  }
+
+  function situacaoDe(u){
+    if(u.bloqueado) return { chave:'bloqueado', rotulo:'Bloqueado', cls:'no' };
+    if(!u.aprovado) return { chave:'aguardando', rotulo:'Aguardando', cls:'pend' };
+    return { chave:'aprovado', rotulo:'Aprovado', cls:'ok' };
+  }
+
+  function admAviso(texto, tipo){
+    const el = document.getElementById('admMensagem');
+    if(!el) return;
+    el.textContent = texto;
+    el.className = 'adm-msg show ' + (tipo || 'ok');
+  }
+
+  async function verificarAdmin(){
+    try{
+      const { data } = await sb.from('admins').select('id').maybeSingle();
+      ehAdmin = !!data;
+    }catch(_){ ehAdmin = false; }
+    admBotaoAba.hidden = !ehAdmin;
+    if(ehAdmin){
+      await admCarregar();
+      admRenderizar();
+      admMontarExemplo();
+    }
+  }
+
+  async function admCarregar(){
+    const { data, error } = await sb.rpc('listar_usuarios');
+    if(error){ admUsuarios = []; return false; }
+    admUsuarios = data || [];
+    return true;
+  }
+
+  function admFiltrados(){
+    const termo = (document.getElementById('admBusca').value || '').trim().toLowerCase();
+    const filtro = document.getElementById('admFiltro').value;
+    let lista = admUsuarios.slice();
+
+    if(termo){
+      lista = lista.filter(u =>
+        (u.nome||'').toLowerCase().includes(termo) ||
+        (u.email||'').toLowerCase().includes(termo) ||
+        (u.empresa||'').toLowerCase().includes(termo));
+    }
+    if(filtro === 'aprovados')   lista = lista.filter(u => u.aprovado && !u.bloqueado);
+    if(filtro === 'aguardando')  lista = lista.filter(u => !u.aprovado && !u.bloqueado);
+    if(filtro === 'bloqueados')  lista = lista.filter(u => u.bloqueado);
+    if(filtro === 'admins')      lista = lista.filter(u => u.admin);
+    if(filtro === 'excedentes')  lista = lista.filter(u => (u.dispositivos_sobre_limite||0) > 0);
+
+    const col = admOrdem.col, dir = admOrdem.dir;
+    lista.sort(function(a, b){
+      let va, vb;
+      if(col === 'situacao'){ va = situacaoDe(a).rotulo; vb = situacaoDe(b).rotulo; }
+      else { va = a[col]; vb = b[col]; }
+      if(va == null) va = '';
+      if(vb == null) vb = '';
+      if(typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+      if(typeof va === 'boolean') return ((va?1:0) - (vb?1:0)) * dir;
+      return String(va).localeCompare(String(vb), 'pt-BR') * dir;
+    });
+    return lista;
+  }
+
+  function admRenderizar(){
+    const total = admUsuarios.length;
+    document.getElementById('admTotal').textContent      = total;
+    document.getElementById('admAprovados').textContent  = admUsuarios.filter(u=>u.aprovado && !u.bloqueado).length;
+    document.getElementById('admAguardando').textContent = admUsuarios.filter(u=>!u.aprovado && !u.bloqueado).length;
+    document.getElementById('admBloqueados').textContent = admUsuarios.filter(u=>u.bloqueado).length;
+    document.getElementById('admAdmins').textContent     = admUsuarios.filter(u=>u.admin).length;
+
+    const lista = admFiltrados();
+    const corpo = document.getElementById('admCorpo');
+    corpo.innerHTML = lista.map(function(u){
+      const s = situacaoDe(u);
+      const excedente = (u.dispositivos_sobre_limite||0) > 0;
+      return '<tr data-id="' + esc(u.id) + '"' + (admSelecionado === u.id ? ' class="sel"' : '') + '>' +
+        '<td>' + esc(u.nome || '—') + '</td>' +
+        '<td>' + esc(u.email || '') + '</td>' +
+        '<td>' + esc(u.empresa || '—') + '</td>' +
+        '<td><span class="pill ' + s.cls + '">' + s.rotulo + '</span>' +
+          (u.admin ? ' <span class="pill adm">Admin</span>' : '') + '</td>' +
+        '<td class="num"' + (excedente ? ' style="color:var(--red); font-weight:700;"' : '') + '>' +
+          (u.total_dispositivos||0) + '/' + (u.limite_dispositivos||0) + '</td>' +
+        '<td class="num">' + (u.total_acessos||0) + '</td>' +
+        '<td>' + dataBR(u.ultimo_login, true) + '</td>' +
+        '<td>' + dataBR(u.criado_em) + '</td>' +
+      '</tr>';
+    }).join('');
+
+    document.getElementById('admVazio').hidden = lista.length > 0;
+
+    document.querySelectorAll('.adm-tabela th').forEach(function(th){
+      const seta = admOrdem.col === th.dataset.col ? (admOrdem.dir === 1 ? ' ▲' : ' ▼') : '';
+      th.innerHTML = th.textContent.replace(/[ ▲▼]+$/, '') + '<span class="seta">' + seta + '</span>';
+    });
+  }
+
+  async function admAbrirDetalhe(id){
+    admSelecionado = id;
+    const u = admUsuarios.find(x => x.id === id);
+    const area = document.getElementById('admDetalhe');
+    if(!u){ area.innerHTML = ''; return; }
+
+    const [{ data: aparelhos }, { data: acessos }] = await Promise.all([
+      sb.from('dispositivos').select('*').eq('user_id', id).order('ultimo_acesso', { ascending: false }),
+      sb.from('acessos').select('*').eq('user_id', id).order('quando', { ascending: false }).limit(15)
+    ]);
+
+    const limite = u.limite_dispositivos || 0;
+    const s = situacaoDe(u);
+
+    const html =
+      '<div class="adm-detalhe">' +
+        '<h3>' + esc(u.nome || 'Sem nome') + ' <span class="pill ' + s.cls + '">' + s.rotulo + '</span>' +
+          (u.admin ? ' <span class="pill adm">Admin</span>' : '') + '</h3>' +
+        '<div class="sub">' + esc(u.email || '') + (u.empresa ? ' · ' + esc(u.empresa) : '') + '</div>' +
+
+        '<div class="adm-dados">' +
+          '<div class="d"><div class="k">Assinou em</div><div class="v">' + dataBR(u.criado_em, true) + '</div></div>' +
+          '<div class="d"><div class="k">E-mail confirmado</div><div class="v">' + (u.email_confirmado ? 'Sim' : 'Não') + '</div></div>' +
+          '<div class="d"><div class="k">Último login</div><div class="v">' + dataBR(u.ultimo_login, true) + '</div></div>' +
+          '<div class="d"><div class="k">Último acesso</div><div class="v">' + dataBR(u.ultimo_acesso, true) + '</div></div>' +
+          '<div class="d"><div class="k">Total de acessos</div><div class="v">' + (u.total_acessos||0) + '</div></div>' +
+          '<div class="d"><div class="k">Aparelhos</div><div class="v">' + (u.total_dispositivos||0) + ' de ' + limite +
+            ((u.dispositivos_sobre_limite||0) > 0 ? ' <span class="pill no">' + u.dispositivos_sobre_limite + ' acima do limite</span>' : '') +
+          '</div></div>' +
+        '</div>' +
+
+        '<div class="adm-acoes">' +
+          '<button type="button" class="small" data-acao="' + (u.aprovado ? 'revogar' : 'aprovar') + '">' +
+            (u.aprovado ? 'Revogar aprovação' : 'Aprovar acesso') + '</button>' +
+          '<button type="button" class="ghost small" data-acao="' + (u.bloqueado ? 'desbloquear' : 'bloquear') + '">' +
+            (u.bloqueado ? 'Desbloquear' : 'Bloquear') + '</button>' +
+          '<span style="font-size:12px; color:var(--ink-soft);">Limite de aparelhos:</span>' +
+          '<input type="number" id="admLimite" min="1" max="20" step="1" value="' + limite + '">' +
+          '<button type="button" class="ghost small" data-acao="limite">Salvar limite</button>' +
+          (u.admin ? '' : '<button type="button" class="ghost small" data-acao="promover">Tornar administrador</button>') +
+        '</div>' +
+
+        '<div class="adm-lista">' +
+          '<h4>Aparelhos (' + (aparelhos||[]).length + ')</h4>' +
+          ((aparelhos||[]).length ? (aparelhos||[]).map(function(d, i){
+            const acima = i >= limite;
+            return '<div class="adm-item' + (acima ? ' excedente' : '') + '">' +
+              '<span>' + esc(d.tipo || 'desconhecido') + ' · ' + esc(d.navegador || '?') + ' · ' + esc(d.sistema || '?') +
+                (d.fuso ? ' · ' + esc(d.fuso) : '') + (acima ? ' <span class="pill no">acima do limite</span>' : '') + '</span>' +
+              '<span class="quando">' + dataBR(d.ultimo_acesso, true) +
+                ' <button type="button" class="ghost small" data-remover="' + esc(d.id) + '">remover</button></span>' +
+            '</div>';
+          }).join('') : '<div style="font-size:12.5px; color:var(--ink-soft);">Nenhum aparelho registrado.</div>') +
+        '</div>' +
+
+        '<div class="adm-lista">' +
+          '<h4>Últimos acessos (' + (acessos||[]).length + ')</h4>' +
+          ((acessos||[]).length ? (acessos||[]).map(function(a){
+            return '<div class="adm-item"><span>' + esc(a.tipo || 'login') + (a.fuso ? ' · ' + esc(a.fuso) : '') + '</span>' +
+              '<span class="quando">' + dataBR(a.quando, true) + '</span></div>';
+          }).join('') : '<div style="font-size:12.5px; color:var(--ink-soft);">Nenhum acesso registrado.</div>') +
+        '</div>' +
+
+        '<div class="adm-msg" id="admMensagem"></div>' +
+      '</div>';
+
+    area.innerHTML = html;
+    admRenderizar();
+  }
+
+  // Recarrega a lista e o detalhe e SÓ ENTÃO escreve a mensagem: o recarregamento
+  // reconstrói o HTML do detalhe e levaria o elemento da mensagem junto.
+  async function admDepoisDaAcao(id, texto, tipo){
+    await admCarregar();
+    await admAbrirDetalhe(id);
+    admAviso(texto, tipo || 'ok');
+  }
+
+  async function admExecutar(acao, id){
+    const u = admUsuarios.find(x => x.id === id);
+    if(!u) return;
+    try{
+      if(acao === 'aprovar' || acao === 'revogar'){
+        const { error } = await sb.from('profiles').update({ aprovado: acao === 'aprovar' }).eq('id', id);
+        if(error) throw error;
+        await admDepoisDaAcao(id, acao === 'aprovar' ? 'Acesso aprovado.' : 'Aprovação revogada.');
+      }
+      else if(acao === 'bloquear' || acao === 'desbloquear'){
+        const { error } = await sb.from('profiles').update({ bloqueado: acao === 'bloquear' }).eq('id', id);
+        if(error) throw error;
+        await admDepoisDaAcao(id, acao === 'bloquear' ? 'Usuário bloqueado.' : 'Usuário desbloqueado.');
+      }
+      else if(acao === 'limite'){
+        const valor = parseInt(document.getElementById('admLimite').value, 10);
+        if(!(valor >= 1 && valor <= 20)){
+          admAviso('O limite precisa ser um número de 1 a 20.', 'err');
+          return;
+        }
+        const { error } = await sb.from('profiles').update({ limite_dispositivos: valor }).eq('id', id);
+        if(error) throw error;
+        await admDepoisDaAcao(id, 'Limite alterado para ' + valor + ' aparelho(s).');
+      }
+      else if(acao === 'promover'){
+        const { error } = await sb.rpc('promover_admin', { p_email: u.email });
+        if(error) throw error;
+        await admDepoisDaAcao(id, esc(u.nome || u.email) + ' agora é administrador (e foi aprovado).');
+      }
+    }catch(erro){
+      admAviso(erro && erro.message ? erro.message : 'Não foi possível concluir a ação.', 'err');
+    }
+  }
+
+  async function admRemoverAparelho(dispositivoId, userId){
+    try{
+      const { error } = await sb.from('dispositivos').delete().eq('id', dispositivoId);
+      if(error) throw error;
+      await admDepoisDaAcao(userId, 'Aparelho removido.');
+    }catch(erro){
+      admAviso(erro && erro.message ? erro.message : 'Não foi possível remover o aparelho.', 'err');
+    }
+  }
+
+  function admExportarCsv(){
+    const lista = admFiltrados();
+    const cab = ['Nome','E-mail','Empresa','Situação','Administrador','Aparelhos','Limite','Acessos','Último login','Cadastro'];
+    const linhas = lista.map(function(u){
+      return [
+        u.nome || '', u.email || '', u.empresa || '', situacaoDe(u).rotulo, u.admin ? 'sim' : 'não',
+        u.total_dispositivos || 0, u.limite_dispositivos || 0, u.total_acessos || 0,
+        dataBR(u.ultimo_login, true), dataBR(u.criado_em, true)
+      ].map(function(c){
+        const t = String(c).replace(/"/g, '""');
+        return /[;"\n]/.test(t) ? '"' + t + '"' : t;
+      }).join(';');
+    });
+    const csv = '﻿' + [cab.join(';')].concat(linhas).join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'usuarios-guia-lp-' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function admMontarExemplo(){
+    document.getElementById('admExemplo').textContent =
+      'curl "' + SUPABASE_URL + '/rest/v1/ncm?ncm=eq.22030000" \\\n' +
+      '  -H "apikey: ' + SUPABASE_PUBLISHABLE_KEY + '" \\\n' +
+      '  -H "Authorization: Bearer <access_token>"';
+  }
+
+  function limparAdmin(){
+    ehAdmin = false;
+    admUsuarios = [];
+    admSelecionado = null;
+    admBotaoAba.hidden = true;
+    const corpo = document.getElementById('admCorpo');
+    if(corpo) corpo.innerHTML = '';
+    const det = document.getElementById('admDetalhe');
+    if(det) det.innerHTML = '';
+    ['admTotal','admAprovados','admAguardando','admBloqueados','admAdmins'].forEach(function(id){
+      const el = document.getElementById(id);
+      if(el) el.textContent = '—';
+    });
+    const busca = document.getElementById('admBusca');
+    if(busca) busca.value = '';
+  }
+
+  // ligações do painel
+  document.getElementById('admBusca').addEventListener('input', admRenderizar);
+  document.getElementById('admFiltro').addEventListener('change', admRenderizar);
+  document.getElementById('admExportar').addEventListener('click', admExportarCsv);
+  document.getElementById('admRecarregar').addEventListener('click', async function(){
+    await admCarregar();
+    admRenderizar();
+    if(admSelecionado) await admAbrirDetalhe(admSelecionado);
+  });
+  document.querySelectorAll('.adm-tabela th').forEach(function(th){
+    th.addEventListener('click', function(){
+      const col = th.dataset.col;
+      admOrdem = { col: col, dir: (admOrdem.col === col ? -admOrdem.dir : 1) };
+      admRenderizar();
+    });
+  });
+  document.getElementById('admCorpo').addEventListener('click', function(e){
+    const tr = e.target.closest('tr[data-id]');
+    if(tr) admAbrirDetalhe(tr.dataset.id);
+  });
+  document.getElementById('admDetalhe').addEventListener('click', function(e){
+    const acao = e.target.closest('[data-acao]');
+    if(acao){ admExecutar(acao.dataset.acao, admSelecionado); return; }
+    const rem = e.target.closest('[data-remover]');
+    if(rem) admRemoverAparelho(rem.dataset.remover, admSelecionado);
+  });
+  document.getElementById('admSubUsuarios').addEventListener('click', function(){
+    document.getElementById('admSubUsuarios').classList.add('active');
+    document.getElementById('admSubApi').classList.remove('active');
+    document.getElementById('admPainelUsuarios').hidden = false;
+    document.getElementById('admPainelApi').hidden = true;
+  });
+  document.getElementById('admSubApi').addEventListener('click', function(){
+    document.getElementById('admSubApi').classList.add('active');
+    document.getElementById('admSubUsuarios').classList.remove('active');
+    document.getElementById('admPainelApi').hidden = false;
+    document.getElementById('admPainelUsuarios').hidden = true;
+  });
+
+  /* ---------- o que roda depois do login ---------- */
+  // Roda uma vez por sessão: onAuthStateChange também dispara em renovação de
+  // token, e sem esta guarda cada renovação gravaria um acesso a mais.
+  async function aoEntrar(user){
+    if(perfilCarregadoDe === user.id) return;
+    perfilCarregadoDe = user.id;   // marca ANTES do await: duas chamadas seguidas
+                                   // passariam as duas se a marca ficasse depois
+    const perfil = await carregarPerfil(user);
+
+    // Servidor inalcançável: quem já tem a base em cache continua trabalhando
+    // offline. Nada se perde em segurança — o RLS decide do lado do servidor,
+    // e ele volta a decidir assim que a conexão voltar.
+    if(perfil && perfil.indisponivel){
+      mostrarSituacao(null);
+      sincronizarBase();
+      return;
+    }
+
+    if(perfil && perfil.bloqueado){ mostrarSituacao('bloqueado'); return; }
+    if(!perfil || !perfil.aprovado){ mostrarSituacao('aguardando'); return; }
+
+    const registro = await registrarAcesso(user);
+    if(!registro.ok){ mostrarSituacao('limite'); return; }
+
+    mostrarSituacao(null);
+    sincronizarBase();
+    verificarAdmin();
+  }
+
   function mostrarGate(){
     mostrarConteudo();
+    limparAdmin();
+    mostrarSituacao(null);
     document.body.classList.add('auth-locked');
     document.body.classList.remove('auth-ready');
     perfilCarregadoDe = null;
@@ -959,7 +1675,7 @@
       msg('Você chegou pelo link de redefinição. Defina uma nova senha pelo painel do Supabase ou peça um novo link ao administrador.', 'info');
     }
     if(session.user){
-      setTimeout(() => { carregarPerfil(session.user); sincronizarBase(); }, 0);
+      setTimeout(() => { aoEntrar(session.user); }, 0);
     }
   });
 
@@ -1406,13 +2122,16 @@ function parseNFeXML(text){
 document.getElementById('tabBtnLP').addEventListener('click', ()=>switchTab('lp'));
 document.getElementById('tabBtnAudit').addEventListener('click', ()=>switchTab('audit'));
 document.getElementById('tabBtnCustoOp').addEventListener('click', ()=>switchTab('custoop'));
+document.getElementById('tabBtnAdmin').addEventListener('click', ()=>switchTab('admin'));
 function switchTab(t){
   document.getElementById('tabBtnLP').classList.toggle('active', t==='lp');
   document.getElementById('tabBtnAudit').classList.toggle('active', t==='audit');
   document.getElementById('tabBtnCustoOp').classList.toggle('active', t==='custoop');
+  document.getElementById('tabBtnAdmin').classList.toggle('active', t==='admin');
   document.getElementById('pageLP').classList.toggle('active', t==='lp');
   document.getElementById('pageAudit').classList.toggle('active', t==='audit');
   document.getElementById('pageCustoOp').classList.toggle('active', t==='custoop');
+  document.getElementById('pageAdmin').classList.toggle('active', t==='admin');
 }
 
 // ---------- Custo Operacional ----------

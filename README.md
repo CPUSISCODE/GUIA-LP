@@ -109,12 +109,94 @@ carregando, em vez de responder "NCM não encontrado" — que seria mentira.
 
 Para recarregar a base, ver [`supabase/seed/README.md`](supabase/seed/README.md).
 
-> **O que o login protege, e o que não protege.** Sem sessão válida, o `select` em
-> `public.ncm` é negado pelo RLS: a base fiscal em si passa a ser de acesso controlado.
-> Mas o `index.html` continua sendo um arquivo estático público, com a lógica de cálculo
-> à vista no código-fonte; e, uma vez sincronizada, a base fica no `localStorage` daquele
-> navegador inclusive depois do logout — é o preço de funcionar offline. O login controla
-> quem **obtém** a base, não o que a pessoa faz com ela depois.
+> **O que o login protege, e o que não protege.** Sem sessão válida — e, desde o painel
+> de administração, sem aprovação — o `select` em `public.ncm` é negado pelo RLS: a base
+> fiscal em si passa a ser de acesso controlado. Mas o `index.html` continua sendo um
+> arquivo estático público, com a lógica de cálculo à vista no código-fonte; e, uma vez
+> sincronizada, a base fica no `localStorage` daquele navegador inclusive depois do
+> logout — é o preço de funcionar offline. O login controla quem **obtém** a base, não o
+> que a pessoa faz com ela depois.
+
+## Administração de acessos
+
+Aba **Administração**, visível apenas para administradores, criada por
+[`20260807124616_criar_administracao_admins_dispositivos_acessos.sql`](supabase/migrations/20260807124616_criar_administracao_admins_dispositivos_acessos.sql)
+e [`20260807124640_criar_funcoes_do_painel_admin.sql`](supabase/migrations/20260807124640_criar_funcoes_do_painel_admin.sql).
+
+### Por que a flag de admin não fica em `profiles`
+
+Usuários têm policy de `update` no próprio perfil. Uma coluna `admin` ali seria
+**auto-atribuível**: qualquer um viraria administrador sozinho com um `PATCH`. Por isso
+existe `public.admins`, uma tabela separada **sem nenhuma policy de escrita para o
+cliente** — entra e sai dela só pelas funções `promover_admin` e `rebaixar_admin`, que
+checam administrador antes de qualquer coisa.
+
+Pelo mesmo motivo, os quatro campos de controle que ficam em `profiles` (`aprovado`,
+`bloqueado`, `limite_dispositivos`, `observacao`) são protegidos pelo trigger
+`profiles_proteger_controle`, que recusa a alteração quando quem atualiza não é admin.
+O trigger libera quando `auth.uid()` é nulo, que significa operação de servidor
+(migration, `service_role`) e não requisição de navegador — sem essa ressalva, a própria
+migration que aprova o primeiro administrador seria barrada pelo trigger que ela acabou
+de criar.
+
+### Tabelas
+
+| tabela | o que guarda |
+|---|---|
+| `public.admins` | `id` (FK para `auth.users`), `criado_em`, `criado_por`. Select só da própria linha — é assim que o frontend sabe se mostra a aba. |
+| `public.dispositivos` | `impressao`, `tipo`, `navegador`, `sistema`, `fuso`, `user_agent`, `primeiro_acesso`, `ultimo_acesso`, com `unique (user_id, impressao)`. |
+| `public.acessos` | um registro por entrada: `dispositivo_id`, `quando`, `tipo`, `fuso`. |
+
+`impressao` é um identificador **aleatório que o próprio navegador gera e guarda**. Não é
+fingerprinting: não identifica o aparelho fora desta ferramenta e some se o usuário limpar
+os dados do site.
+
+### O limite de aparelhos vale no banco
+
+`dispositivos_aplicar_limite` é um trigger `before insert`: checagem em JavaScript seria
+contornada pelo devtools em cinco segundos. Ele tem uma sutileza do Postgres embutida —
+o `BEFORE INSERT` dispara **antes** de o `ON CONFLICT` ser avaliado, então um trigger que
+apenas contasse aparelhos barraria o usuário no computador de sempre a cada novo login.
+Por isso ele retorna cedo quando a `impressao` já existe para aquele usuário.
+
+### O schema `private`
+
+`e_admin()` e `usuario_liberado()` são usados **dentro das policies** e por isso vivem em
+`private`, que o PostgREST não expõe. Em `public` eles ganhariam rota em
+`/rest/v1/rpc/...` e o `get_advisors` acusaria. A role `authenticated` recebe
+`usage` no schema e `execute` nas funções porque as policies são avaliadas com os
+privilégios de quem consulta.
+
+Já `listar_usuarios()`, `promover_admin()` e `rebaixar_admin()` **precisam** ser
+chamáveis por `authenticated` — é assim que o painel funciona — e por isso o
+`get_advisors` mantém três avisos de *Signed-In Users Can Execute SECURITY DEFINER
+Function*. São intencionais: a autorização está dentro de cada função, na primeira linha,
+levantando `42501` para qualquer não-administrador. Silenciar o aviso significaria
+desligar o painel.
+
+### O que o painel faz
+
+- Cartões de resumo: total, aprovados, aguardando, bloqueados, administradores.
+- Planilha ordenável por qualquer coluna, busca por nome/e-mail/empresa, filtro por
+  situação e exportação em CSV (com BOM e separador `;`, para o Excel brasileiro abrir
+  sem passo intermediário).
+- Detalhe do usuário: quando assinou, se confirmou o e-mail, último login, último acesso,
+  total de acessos, aparelhos acima do limite, lista de aparelhos e últimos acessos.
+- Ações: aprovar/revogar, bloquear/desbloquear, alterar limite, remover aparelho e tornar
+  outro usuário administrador.
+- Aba **API** documentando os endpoints REST que o PostgREST já expõe.
+
+Quem não estiver liberado vê uma tela explicando a situação no lugar da ferramenta, com
+textos distintos para cadastro em análise, acesso suspenso e limite de aparelhos atingido.
+
+### Dois limites que valem dizer em voz alta
+
+- **A "região" não vem do IP.** Sem servidor próprio, o que dá para captar é o fuso do
+  navegador (`Intl.DateTimeFormat().resolvedOptions().timeZone`), que é aproximação
+  regional e vem do cliente — portanto falsificável. Serve de visibilidade operacional,
+  não de prova. Região por IP exigiria uma Edge Function.
+- **Guardar dispositivo, fuso e histórico de acesso de usuário identificado é dado
+  pessoal sob a LGPD** e precisa estar declarado para o usuário.
 
 > O GUIA-LP e o GUIA-SN usam **projetos Supabase separados** (`FAROL-GUIA-LP` e
 > `FAROL-GUIA-SN`), cada um com o seu próprio banco e os seus próprios usuários.
