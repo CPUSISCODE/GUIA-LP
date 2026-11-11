@@ -171,6 +171,18 @@
   .op-summary{display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line); font-size:13px;}
   .op-summary .v{font-family:var(--mono); font-weight:700;}
   .xml-section h2{font-family:var(--serif); font-size:20px; margin:0 0 6px;}
+  .xml-archive{margin:18px 0 24px; padding:16px; border:1px solid var(--line); border-radius:6px;}
+  .xml-archive h3{font-size:16px; margin:0 0 8px;}
+  .archive-toolbar{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:12px 0;}
+  .archive-toolbar input{flex:1; min-width:180px; padding:9px;}
+  .archive-scroll{overflow-x:auto;}
+  .archive-table{width:100%; border-collapse:collapse; font-size:12px; text-align:left;}
+  .archive-table td,.archive-table th{padding:10px 8px; border-bottom:1px solid var(--line); overflow-wrap:anywhere;}
+  .archive-table td:last-child{min-width:175px;}
+  .archive-table button{margin:2px 4px 2px 0;}
+  .archive-error{color:var(--red);}
+  #lpArchiveReceipt{font-size:13px; margin:8px 0;}
+  @media print{.xml-archive,#lpArchiveReceipt{display:none!important;}}
   .xml-section p.sub{font-size:12.5px; color:var(--ink-soft); margin:0 0 16px; max-width:640px;}
   .upload-row{display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:16px;}
   .upload-row input[type=file]{font-size:13px; font-family:var(--sans);}
@@ -631,6 +643,29 @@
         <input type="file" id="lpXmlFile" accept=".xml">
         <button class="ghost" id="lpClearXmlBtn">Limpar</button>
       </div>
+      <p class="hint">XMLs de até 5 MB são guardados automaticamente na sua conta. “Limpar” fecha a nota atual e mantém o histórico.</p>
+      <div id="lpArchiveReceipt" role="status" aria-live="polite"></div>
+      <section class="xml-archive" aria-labelledby="lpArchiveTitle">
+        <h3 id="lpArchiveTitle">XMLs guardados</h3>
+        <p class="hint" id="lpArchiveStatus" role="status" aria-live="polite">Entre na sua conta para consultar os XMLs.</p>
+        <div class="archive-toolbar">
+          <label for="lpArchiveSearch">Buscar XML</label>
+          <input id="lpArchiveSearch" type="search" placeholder="Arquivo, fornecedor, número ou chave da nota" maxlength="100">
+          <button type="button" class="ghost small" id="lpArchiveRefresh">Atualizar histórico</button>
+        </div>
+        <div class="archive-scroll">
+          <table class="archive-table" aria-label="Histórico de XMLs guardados">
+            <thead><tr><th scope="col">Arquivo</th><th scope="col">Fornecedor</th><th scope="col">Nota</th><th scope="col">Enviado em</th><th scope="col">Total</th><th scope="col">Ações</th></tr></thead>
+            <tbody id="lpArchiveBody"></tbody>
+          </table>
+        </div>
+        <p class="hint" id="lpArchiveEmpty">Nenhum XML guardado. Importe uma nota para começar.</p>
+        <div class="archive-toolbar">
+          <span class="hint" id="lpArchiveCount">0 XML(s) · página 1</span>
+          <button type="button" class="ghost small" id="lpArchivePrev" disabled>Anterior</button>
+          <button type="button" class="ghost small" id="lpArchiveNext" disabled>Próxima</button>
+        </div>
+      </section>
       <div id="lpXmlErrorArea"></div>
       <div id="lpXmlEmitInfo" class="emit-info" style="display:none;"></div>
 
@@ -887,6 +922,7 @@
 
 </div><!-- /appRoot -->
 
+<script src="xml-archive.js"></script>
 <script>
 /* =========================================================
    Autenticação (Supabase) — cadastro, login, sessão e logout
@@ -1048,6 +1084,7 @@
     if(!session || !session.user){ mostrarGate(); return; }
 
     const user = session.user;
+    if(window.lpXmlArchive) window.lpXmlArchive.setUser(user.id);
     const meta = user.user_metadata || {};
     barEmail.textContent = user.email || '';
     barNome.textContent  = meta.nome || (user.email || '').split('@')[0] || 'Usuário';
@@ -1651,6 +1688,7 @@
   }
 
   function mostrarGate(){
+    if(window.lpXmlArchive) window.lpXmlArchive.setUser(null);
     mostrarConteudo();
     limparAdmin();
     mostrarSituacao(null);
@@ -2038,6 +2076,7 @@ const MOTIVOS_DESONERACAO = {
 };
 
 function parseNFeXML(text){
+  if(/<!DOCTYPE|<!ENTITY/i.test(text)) throw new Error('XML com DTD ou entidades externas não é aceito.');
   const parser = new DOMParser();
   const doc = parser.parseFromString(text, 'application/xml');
   if(doc.getElementsByTagName('parsererror').length){
@@ -2115,7 +2154,12 @@ function parseNFeXML(text){
     items.forEach(it => { it.vICMSDeson = globalVDeson * (it.vProd/sumVProd); if(!it.motDesICMS) it.motDesICMS = '9'; });
   }
 
-  return {emitUF, emitName, emitCRT, items, globalVFrete, globalVDesc, globalVDeson};
+  const ide = infNFe.getElementsByTagName('ide')[0];
+  const rawKey = (infNFe.getAttribute('Id') || '').replace(/^NFe/, '');
+  const chaveNfe = /^\d{44}$/.test(rawKey) ? rawKey : '';
+  const numeroNota = ide ? getFirst('nNF', ide) : '';
+  const valorTotal = icmsTotEls.length ? (parseFloat(getFirst('vNF', icmsTotEls[0])) || 0) : items.reduce((sum, item) => sum + item.vProd, 0);
+  return {emitUF, emitName, emitCRT, items, globalVFrete, globalVDesc, globalVDeson, chaveNfe, numeroNota, valorTotal};
 }
 
 // (função legada computeIcmsEntradaXml removida — cálculo unificado em computeIcmsEntradaLP)
@@ -2611,19 +2655,42 @@ let lpXmlItemsState = [];
 document.getElementById('lpXmlFile').addEventListener('change', async function(e){
   const file = e.target.files[0];
   if(!file) return;
-  if(!baseCarregada){
-    showLpXmlError('A base fiscal ainda está sendo carregada. Aguarde alguns instantes e importe o XML de novo.');
-    return;
-  }
+  const owner = window.lpXmlArchive.getUserId();
+  const receipt = document.getElementById('lpArchiveReceipt');
+  e.target.disabled = true;
+  receipt.textContent = 'Lendo e guardando XML…';
+  receipt.classList.remove('archive-error');
   try {
+    if(!file.size || file.size > window.lpXmlArchive.maxBytes) throw new Error('Selecione um XML de até 5 MB.');
     const text = await file.text();
     const parsed = parseNFeXML(text);
-    lpLoadXmlItems(parsed);
-  } catch(err){ showLpXmlError('Erro ao ler o XML: ' + err.message); }
+    if(window.lpXmlArchive.getUserId() !== owner) return;
+    try{ receipt.textContent = await window.lpXmlArchive.save(file, parsed); }
+    catch(error){
+      if(window.lpXmlArchive.getUserId() !== owner) return;
+      receipt.textContent = error.message; receipt.classList.add('archive-error');
+    }
+    if(window.lpXmlArchive.getUserId() !== owner) return;
+    if(baseCarregada) lpLoadXmlItems(parsed);
+    else showLpXmlError('A base fiscal ainda está sendo carregada. Para calcular os preços, aguarde a base e clique em “Abrir” no histórico.');
+  } catch(err){
+    if(window.lpXmlArchive.getUserId() === owner){
+      receipt.textContent = 'XML não guardado.'; receipt.classList.add('archive-error');
+      showLpXmlError('Erro ao ler o XML: ' + err.message);
+    }
+  }finally{ e.target.disabled = false; e.target.value = ''; }
 });
+window.lpOpenArchivedXml = async function(file, stillCurrent){
+  if(!baseCarregada) throw new Error('Aguarde o carregamento da base fiscal para abrir os cálculos desta nota.');
+  const text = await file.text();
+  if(!stillCurrent()) return;
+  lpLoadXmlItems(parseNFeXML(text));
+  document.getElementById('lpXmlEmitInfo').scrollIntoView({behavior:'smooth', block:'start'});
+};
 document.getElementById('lpClearXmlBtn').addEventListener('click', function(){
   lpXmlItemsState = [];
   document.getElementById('lpXmlFile').value = '';
+  document.getElementById('lpArchiveReceipt').textContent = '';
   document.getElementById('lpXmlErrorArea').innerHTML = '';
   document.getElementById('lpXmlEmitInfo').style.display='none';
   var _irpjBar = document.getElementById('lpIrpjInfo'); if(_irpjBar) _irpjBar.style.display='none';

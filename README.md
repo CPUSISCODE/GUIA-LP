@@ -244,6 +244,28 @@ usuário clicar no link. Para liberar uma conta manualmente:
 update auth.users set email_confirmed_at = now() where email = 'usuario@dominio.com';
 ```
 
+## Histórico de XMLs
+
+Ao importar uma NF-e válida de até 5 MB, o XML original é guardado automaticamente
+na conta autenticada. A seção **XMLs guardados** permite buscar por arquivo,
+fornecedor, número ou chave da nota, reabrir os cálculos e baixar o arquivo original.
+O histórico tem páginas de 20 registros e funciona entre aparelhos com a mesma conta.
+**Limpar** apenas fecha o cálculo atual; não apaga o arquivo guardado.
+
+A migration `supabase/migrations/20261111131022_guardar_xml_documentos.sql` cria
+`public.xml_documentos`, com os bytes originais em base64 e os metadados na mesma
+linha. Assim não há upload órfão se a gravação falhar. Cada conta só pode inserir e
+ler os próprios XMLs, e precisa continuar aprovada e não bloqueada. Nem o painel
+admin ganha acesso aos XMLs de outras contas. Não há URLs públicas de download.
+Chave de NF-e e SHA-256 impedem duplicados por usuário, sem sobrescrever originais.
+
+O histórico requer rede e a migration aplicada no **FAROL-GUIA-LP**. Falhas de
+gravação são exibidas explicitamente; o cálculo continua disponível quando a base
+fiscal estiver carregada, e o usuário pode selecionar o arquivo novamente para
+tentar guardar. XMLs importados antes desta atualização precisam ser reenviados,
+pois o aplicativo antigo não conservava os arquivos. Alterações de preço e margem
+feitas no cálculo não alteram o XML original guardado.
+
 ## Executar localmente
 
 Não há build. Abra o `index.html` no navegador ou sirva a pasta:
